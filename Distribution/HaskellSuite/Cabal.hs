@@ -20,6 +20,7 @@ data HSTool = HSTool
   { toolName :: String
   , toolVersion :: Version
   , toolGetInstalledPkgs :: PackageDB -> IO [InstalledPackageInfo]
+  , toolCompile :: FilePath -> [FilePath] -> IO ()
   }
 
 defaultMain :: HSTool -> IO ()
@@ -28,7 +29,7 @@ defaultMain HSTool{..} =
   where
 
   optParser =
-    foldr (<|>) empty [version, hspkgVersion, subparser pkgCommand]
+    foldr (<|>) empty [version, hspkgVersion, subparser pkgCommand, compiler]
 
   versionStr = showVersion toolVersion
 
@@ -51,6 +52,11 @@ defaultMain HSTool{..} =
           pkgs <- concat <$> mapM toolGetInstalledPkgs dbs
           putStr $ intercalate "---\n" $ map showInstalledPackageInfo pkgs
     in command "dump" $ info (pure doDump) idm
+
+  compiler =
+    toolCompile <$>
+      (strOption (long "build-dir" & metavar "PATH") <|> pure ".") <*>
+      arguments str (metavar "FILE")
 
 pkgDbParser :: Parser PackageDBStack
 pkgDbParser =
