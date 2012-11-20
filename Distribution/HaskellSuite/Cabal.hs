@@ -22,14 +22,6 @@ data HSTool = HSTool
   , toolGetInstalledPkgs :: PackageDB -> IO [InstalledPackageInfo]
   }
 
-main = defaultMain testTool
-  where
-  testTool = HSTool
-    { toolName = "myTool"
-    , toolVersion = Version [3,1,4] []
-    , toolGetInstalledPkgs = \_ -> return [emptyInstalledPackageInfo, emptyInstalledPackageInfo]
-    }
-
 defaultMain :: HSTool -> IO ()
 defaultMain HSTool{..} =
   join $ execParser $ info (helper <*> optParser) idm
