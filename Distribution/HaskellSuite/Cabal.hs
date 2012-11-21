@@ -9,6 +9,7 @@ import Data.Monoid
 import Distribution.Simple.Compiler
 import Distribution.Verbosity
 import Distribution.InstalledPackageInfo
+import Distribution.ParseUtils
 import Options.Applicative
 import Control.Monad
 import Text.Printf
@@ -21,6 +22,7 @@ data HSTool = HSTool
   , toolVersion :: Version
   , toolGetInstalledPkgs :: PackageDB -> IO [InstalledPackageInfo]
   , toolCompile :: FilePath -> [FilePath] -> IO ()
+  , toolRegister :: PackageDB -> InstalledPackageInfo -> IO ()
   }
 
 defaultMain :: HSTool -> IO ()
@@ -44,24 +46,42 @@ defaultMain HSTool{..} =
       (long "version")
 
   pkgCommand =
-    command "pkg" (info (subparser pkgSubcommands <*> pkgDbParser) idm)
-  pkgSubcommands = mconcat [pkgDump]
+    command "pkg" (info (subparser pkgSubcommands) idm)
+  pkgSubcommands = mconcat [pkgDump, pkgRegister]
 
-  pkgDump =
-    let doDump dbs = do
-          pkgs <- concat <$> mapM toolGetInstalledPkgs dbs
-          putStr $ intercalate "---\n" $ map showInstalledPackageInfo pkgs
-    in command "dump" $ info (pure doDump) idm
+  pkgDump = command "dump" $ info (doDump <$> pkgDbStackParser) idm
+    where
+      doDump dbs = do
+        pkgs <- concat <$> mapM toolGetInstalledPkgs dbs
+        putStr $ intercalate "---\n" $ map showInstalledPackageInfo pkgs
+
+  pkgRegister =
+    command "register" $ flip info idm $
+      doRegister <$> pkgDbParser
+
+  pkgUpdate =
+    -- FIXME: this should be a separate tool
+    command "update" $ flip info idm $
+      doRegister <$> pkgDbParser
+
+  doRegister d = do
+    pi <- parseInstalledPackageInfo <$> getContents
+    case pi of
+      ParseOk _ a -> toolRegister d a
+      ParseFailed e -> putStrLn $ snd $ locatedErrorMsg e
 
   compiler =
     toolCompile <$>
       (strOption (long "build-dir" & metavar "PATH") <|> pure ".") <*>
       arguments str (metavar "FILE")
 
-pkgDbParser :: Parser PackageDBStack
+pkgDbParser :: Parser PackageDB
 pkgDbParser =
+  flag' GlobalPackageDB (long "global") <|>
+  flag' UserPackageDB   (long "user")   <|>
+  (SpecificPackageDB <$> strOption (long "package-db" & metavar "PATH"))
+
+pkgDbStackParser :: Parser PackageDBStack
+pkgDbStackParser =
   (\fs -> if null fs then [GlobalPackageDB] else fs) <$>
-    many (
-      flag' GlobalPackageDB (long "global") <|>
-      flag' UserPackageDB   (long "user")   <|>
-      (SpecificPackageDB <$> strOption (long "package-db" & metavar "PATH")))
+    many pkgDbParser
