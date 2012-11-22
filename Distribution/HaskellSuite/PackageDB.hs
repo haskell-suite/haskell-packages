@@ -1,31 +1,20 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable #-}
 module Distribution.HaskellSuite.PackageDB
-  ( PackageDB
-  , writeDB
-  , readDB
-  , PkgDBError(..)
-  , toPackageList
-  , fromPackageList
-  )
   where
 
-import Distribution.HaskellSuite.PackageInfo
 import Data.Aeson
+import Data.Aeson.TH
 import Control.Applicative
 import Data.ByteString.Lazy as BS
 import Control.Exception
 import Data.Typeable
 import Data.Monoid
 import Text.Printf
+import Distribution.InstalledPackageInfo
 
-newtype PackageDB = PackageDB [PackageInfo]
-  deriving (FromJSON, ToJSON, Monoid)
+deriveJSON id ''InstalledPackageInfo
 
-toPackageList :: PackageDB -> [PackageInfo]
-toPackageList (PackageDB l) = l
-
-fromPackageList :: [PackageInfo] -> PackageDB
-fromPackageList = PackageDB
+type Packages = [InstalledPackageInfo]
 
 data PkgDBError
   = BadPkgDB FilePath
@@ -40,10 +29,10 @@ instance Show PkgDBError where
       eprefix path (show e)
 instance Exception PkgDBError
 
-writeDB :: FilePath -> PackageDB -> IO ()
+writeDB :: FilePath -> Packages -> IO ()
 writeDB path db = BS.writeFile path $ encode db
 
-readDB :: FilePath -> IO PackageDB
+readDB :: FilePath -> IO Packages
 readDB path = do
   cts <- BS.readFile path
     `catch` \e ->
