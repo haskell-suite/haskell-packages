@@ -1,4 +1,5 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable,
+             TemplateHaskell #-}
 module Distribution.HaskellSuite.PackageDB
   where
 
@@ -11,8 +12,22 @@ import Data.Typeable
 import Data.Monoid
 import Text.Printf
 import Distribution.InstalledPackageInfo
+import Distribution.Package
+import Distribution.Text
 
-deriveJSON id ''InstalledPackageInfo
+-- The following imports are needed only for generation of JSON instances
+import Data.Version (Version(..))
+import Distribution.Simple.Compiler (PackageDB(..))
+import Distribution.License (License(..))
+import Distribution.ModuleName(ModuleName(..))
+
+deriveJSON id ''License
+deriveJSON id ''Version
+deriveJSON id ''ModuleName
+deriveJSON id ''PackageName
+deriveJSON id ''PackageIdentifier
+deriveJSON id ''InstalledPackageId
+deriveJSON id ''InstalledPackageInfo_
 
 type Packages = [InstalledPackageInfo]
 
