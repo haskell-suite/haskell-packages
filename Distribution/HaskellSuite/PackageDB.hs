@@ -38,3 +38,12 @@ readDB path = do
     `catch` \e ->
       throwIO $ PkgDBReadError path e
   maybe (throwIO $ BadPkgDB path) return $ decode cts
+
+locateDB
+  :: FilePath -- ^ path to the global db
+  -> FilePath -- ^ path to the user db
+  -> PackageDB
+  -> FilePath
+locateDB  global _user GlobalPackageDB = global
+locateDB _global  user UserPackageDB = user
+locateDB _global _user (SpecificPackageDB path) = path
