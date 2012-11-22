@@ -9,6 +9,7 @@ import Control.Applicative
 import qualified Data.ByteString.Lazy as BS
 import Control.Exception
 import Control.Monad
+import Control.DeepSeq
 import Data.Typeable
 import Data.Monoid
 import Data.Maybe
@@ -56,10 +57,10 @@ writeDB path db = BS.writeFile path $ encode db
 
 readDB :: FilePath -> IO Packages
 readDB path = do
-  cts <- BS.readFile path
+  cts <- evaluate . force =<< BS.readFile path
     `catch` \e ->
       throwIO $ PkgDBReadError path e
-  maybe (throwIO $ BadPkgDB path) return $ decode cts
+  maybe (throwIO $ BadPkgDB path) return $ decode' cts
 
 locateDB
   :: PackageDbLoc -- ^ path to the global db
