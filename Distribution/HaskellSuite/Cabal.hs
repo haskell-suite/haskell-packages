@@ -16,9 +16,7 @@ import Distribution.ModuleName
 import Options.Applicative
 import Control.Monad
 import Text.Printf
-
--- FIXME
-ourVersion = "0.1"
+import Paths_haskell_packages as Our (version)
 
 data HSTool = HSTool
   { toolName :: String
@@ -49,6 +47,7 @@ defaultMain HSTool{..} =
       , compiler]
 
   versionStr = showVersion toolVersion
+  ourVersionStr = showVersion Our.version
 
   numericVersion =
     flag'
@@ -57,12 +56,12 @@ defaultMain HSTool{..} =
 
   hspkgVersion =
     flag'
-      (putStrLn ourVersion)
+      (putStrLn ourVersionStr)
       (long "hspkg-version")
 
   version =
     flag'
-      (printf "%s %s\nBased on haskell-packages version %s\n" toolName versionStr ourVersion)
+      (printf "%s %s\nBased on haskell-packages version %s\n" toolName versionStr ourVersionStr)
       (long "version")
 
   pkgCommand =
