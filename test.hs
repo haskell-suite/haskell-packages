@@ -1,4 +1,5 @@
 import Distribution.HaskellSuite.Cabal
+import Distribution.HaskellSuite.PackageDB
 import Data.Version
 
 main = defaultMain testTool
@@ -9,7 +10,5 @@ main = defaultMain testTool
     , toolGetInstalledPkgs = \_ -> return []
     , toolCompile = \dir args -> print (dir, args)
     , toolInstallLib = \a b c d e -> print (a,b,c,d,e)
-    , toolRegister = \db _ -> print db
+    , toolRegister = register . locateDB (error "GlobalDB") (error "LocalDB")
     }
-
-
