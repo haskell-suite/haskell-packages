@@ -10,6 +10,9 @@ import Distribution.Simple.Compiler
 import Distribution.Verbosity
 import Distribution.InstalledPackageInfo
 import Distribution.ParseUtils
+import Distribution.Package
+import Distribution.Text
+import Distribution.ModuleName
 import Options.Applicative
 import Control.Monad
 import Text.Printf
@@ -22,6 +25,13 @@ data HSTool = HSTool
   , toolVersion :: Version
   , toolGetInstalledPkgs :: PackageDB -> IO [InstalledPackageInfo]
   , toolCompile :: FilePath -> [FilePath] -> IO ()
+  , toolInstallLib
+      :: FilePath -- build-dir
+      -> FilePath -- target-dir
+      -> Maybe FilePath -- dynlib-target-dir
+      -> PackageIdentifier
+      -> [ModuleName]
+      -> IO ()
   , toolRegister :: PackageDB -> InstalledPackageInfo -> IO ()
   }
 
@@ -47,13 +57,21 @@ defaultMain HSTool{..} =
 
   pkgCommand =
     command "pkg" (info (subparser pkgSubcommands) idm)
-  pkgSubcommands = mconcat [pkgDump, pkgRegister]
+  pkgSubcommands = mconcat [pkgDump, pkgInstallLib, pkgRegister]
 
   pkgDump = command "dump" $ info (doDump <$> pkgDbStackParser) idm
     where
       doDump dbs = do
         pkgs <- concat <$> mapM toolGetInstalledPkgs dbs
         putStr $ intercalate "---\n" $ map showInstalledPackageInfo pkgs
+
+  pkgInstallLib = command "install-library" $ flip info idm $
+    toolInstallLib <$>
+      (strOption (long "build-dir" & metavar "PATH")) <*>
+      (strOption (long "target-dir" & metavar "PATH")) <*>
+      (optional $ strOption (long "dynlib-target-dir" & metavar "PATH")) <*>
+      (nullOption (long "package-id" & metavar "ID" & reader simpleParse)) <*>
+      (arguments simpleParse (metavar "MODULE"))
 
   pkgRegister =
     command "register" $ flip info idm $
