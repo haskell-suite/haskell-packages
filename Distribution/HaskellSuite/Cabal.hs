@@ -77,11 +77,6 @@ defaultMain HSTool{..} =
     command "register" $ flip info idm $
       doRegister <$> pkgDbParser
 
-  pkgUpdate =
-    -- FIXME: this should be a separate tool
-    command "update" $ flip info idm $
-      doRegister <$> pkgDbParser
-
   doRegister d = do
     pi <- parseInstalledPackageInfo <$> getContents
     case pi of
