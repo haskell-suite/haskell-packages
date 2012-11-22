@@ -41,9 +41,19 @@ defaultMain HSTool{..} =
   where
 
   optParser =
-    foldr (<|>) empty [version, hspkgVersion, subparser pkgCommand, compiler]
+    foldr (<|>) empty
+      [ version
+      , numericVersion
+      , hspkgVersion
+      , subparser pkgCommand
+      , compiler]
 
   versionStr = showVersion toolVersion
+
+  numericVersion =
+    flag'
+      (putStrLn versionStr)
+      (long "numeric-version")
 
   hspkgVersion =
     flag'
