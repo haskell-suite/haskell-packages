@@ -24,12 +24,14 @@ data HSTool = HSTool
   , toolGetInstalledPkgs :: PackageDB -> IO [InstalledPackageInfo]
   , toolCompile :: FilePath -> [FilePath] -> IO ()
   , toolInstallLib
-      :: FilePath -- build-dir
-      -> FilePath -- target-dir
-      -> Maybe FilePath -- dynlib-target-dir
+      :: FilePath
+      -> FilePath
+      -> Maybe FilePath
       -> PackageIdentifier
       -> [ModuleName]
       -> IO ()
+    -- ^ the first three arguments are: build dir, target dir and optional
+    -- target dir for dynamic libraries
   , toolRegister :: PackageDB -> InstalledPackageInfo -> IO ()
   }
 
