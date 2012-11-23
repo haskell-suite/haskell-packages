@@ -15,7 +15,10 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 library
-  exposed-modules:     Distribution.HaskellSuite.PackageDB, Distribution.HaskellSuite.Cabal
+  exposed-modules:
+    Distribution.HaskellSuite.PackageDB
+    Distribution.HaskellSuite.Cabal
+    Distribution.HaskellSuite.Helpers
   other-modules:       Paths_haskell_packages
   build-depends:       base ==4.6.*, optparse-applicative ==0.4.*, aeson ==0.6.*, bytestring ==0.10.*, Cabal ==1.17.*, deepseq
 
