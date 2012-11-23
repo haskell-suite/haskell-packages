@@ -1,7 +1,11 @@
 -- | This module provides Cabal integration.
 {-# LANGUAGE RecordWildCards #-}
 
-module Distribution.HaskellSuite.Cabal where
+module Distribution.HaskellSuite.Cabal
+  ( HSTool(..)
+  , defaultMain
+  )
+  where
 
 import Data.Version
 import Data.List
