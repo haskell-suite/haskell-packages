@@ -1,4 +1,4 @@
-module Distribution.HaskellSuite.Helpers where
+module Distribution.HaskellSuite.Simple where
 
 import Distribution.HaskellSuite.Cabal
 import Distribution.HaskellSuite.PackageDB
