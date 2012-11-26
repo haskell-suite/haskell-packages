@@ -48,7 +48,7 @@ class Tool tool where
   toolUserDBLoc t =
     (</>) <$> haskellPackagesDir <*> pure (toolName t <.> "db")
 
-  toolGetInstalledPkgs :: tool -> PackageDB -> IO [InstalledPackageInfo]
+  toolGetInstalledPkgs :: tool -> PackageDB -> IO Packages
   toolGetInstalledPkgs t db =
     withDBLoc t db $ toolReadPackageDB t
 
@@ -64,10 +64,10 @@ class Tool tool where
     findModuleFiles [buildDir] (toolExtensions t) mods
       >>= installOrdinaryFiles normal targetDir
 
-  toolReadPackageDB :: tool -> PackageDbLoc -> IO [InstalledPackageInfo]
+  toolReadPackageDB :: tool -> PackageDbLoc -> IO Packages
   toolReadPackageDB _ = readDB
 
-  toolWritePackageDB :: tool -> PackageDbLoc -> [InstalledPackageInfo] -> IO ()
+  toolWritePackageDB :: tool -> PackageDbLoc -> Packages -> IO ()
   toolWritePackageDB _ = writeDB
 
   toolRegister :: tool -> PackageDB -> InstalledPackageInfo -> IO ()

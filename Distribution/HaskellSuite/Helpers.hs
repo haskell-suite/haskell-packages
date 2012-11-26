@@ -21,7 +21,7 @@ import Distribution.HaskellSuite.Tool
 
 readPackagesInfo
   :: Tool tool
-  => tool -> [PackageDB] -> [InstalledPackageId] -> IO [InstalledPackageInfo]
+  => tool -> [PackageDB] -> [InstalledPackageId] -> IO Packages
 readPackagesInfo t dbs pkgIds = do
   let idSet = Set.fromList pkgIds
   allPkgInfos <- concat <$> mapM (toolGetInstalledPkgs t) dbs
