@@ -1,4 +1,8 @@
-module Distribution.HaskellSuite.Simple where
+module Distribution.HaskellSuite.Simple
+  ( defaultMain
+  , simpleTool
+  )
+  where
 
 import Distribution.HaskellSuite.Cabal
 import Distribution.HaskellSuite.PackageDB
@@ -33,7 +37,7 @@ simpleTool
   :: String -- ^ tool name
   -> Version -- ^ tool version
   -> PackageDbLoc -- ^ location of global package database
-  -> (FilePath -> [FilePath] -> IO ()) -- ^ compilation function
+  -> (FilePath -> [InstalledPackageId] -> [FilePath] -> IO ()) -- ^ compilation function
   -> [String] -- ^ extensions that generated file have
   -> IO HSTool
 simpleTool name ver globalDB compile exts = do

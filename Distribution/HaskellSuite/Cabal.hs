@@ -26,7 +26,7 @@ data HSTool = HSTool
   { toolName :: String
   , toolVersion :: Version
   , toolGetInstalledPkgs :: PackageDB -> IO [InstalledPackageInfo]
-  , toolCompile :: FilePath -> [FilePath] -> IO ()
+  , toolCompile :: FilePath -> [InstalledPackageId] -> [FilePath] -> IO ()
   , toolInstallLib
       :: FilePath
       -> FilePath
@@ -101,6 +101,7 @@ defaultMain HSTool{..} =
   compiler =
     toolCompile <$>
       (strOption (long "build-dir" & metavar "PATH") <|> pure ".") <*>
+      (many $ InstalledPackageId <$> strOption (long "package-id")) <*>
       arguments str (metavar "FILE")
 
 pkgDbParser :: Parser PackageDB

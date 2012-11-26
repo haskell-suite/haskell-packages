@@ -10,7 +10,7 @@ main = defaultMain testTool
     { toolName = "myTool"
     , toolVersion = Version [3,1,4] []
     , toolGetInstalledPkgs = readDB . ldb
-    , toolCompile = \dir args -> print (dir, args)
+    , toolCompile = \dir pkgs args -> print (dir, pkgs, args)
     , toolInstallLib = \a b c d e -> print (a,b,c,d,e)
     , toolRegister = register . ldb
     }
