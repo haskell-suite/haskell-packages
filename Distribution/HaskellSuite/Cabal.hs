@@ -1,10 +1,7 @@
 -- | This module provides Cabal integration.
-{-# LANGUAGE RecordWildCards #-}
 
 module Distribution.HaskellSuite.Cabal
-  ( HSTool(..)
-  , defaultMain
-  )
+  ( defaultMain )
   where
 
 import Data.Version
@@ -20,27 +17,11 @@ import Distribution.ModuleName
 import Options.Applicative
 import Control.Monad
 import Text.Printf
+import Distribution.HaskellSuite.Tool
 import Paths_haskell_packages as Our (version)
 
-data HSTool = HSTool
-  { toolName :: String
-  , toolVersion :: Version
-  , toolGetInstalledPkgs :: PackageDB -> IO [InstalledPackageInfo]
-  , toolCompile :: FilePath -> [InstalledPackageId] -> [FilePath] -> IO ()
-  , toolInstallLib
-      :: FilePath
-      -> FilePath
-      -> Maybe FilePath
-      -> PackageIdentifier
-      -> [ModuleName]
-      -> IO ()
-    -- ^ the first three arguments are: build dir, target dir and optional
-    -- target dir for dynamic libraries
-  , toolRegister :: PackageDB -> InstalledPackageInfo -> IO ()
-  }
-
-defaultMain :: HSTool -> IO ()
-defaultMain HSTool{..} =
+defaultMain :: Tool tool => tool -> IO ()
+defaultMain t =
   join $ execParser $ info (helper <*> optParser) idm
   where
 
@@ -52,7 +33,7 @@ defaultMain HSTool{..} =
       , subparser pkgCommand
       , compiler]
 
-  versionStr = showVersion toolVersion
+  versionStr = showVersion $ toolVersion t
   ourVersionStr = showVersion Our.version
 
   numericVersion =
@@ -67,7 +48,7 @@ defaultMain HSTool{..} =
 
   version =
     flag'
-      (printf "%s %s\nBased on haskell-packages version %s\n" toolName versionStr ourVersionStr)
+      (printf "%s %s\nBased on haskell-packages version %s\n" (toolName t) versionStr ourVersionStr)
       (long "version")
 
   pkgCommand =
@@ -77,11 +58,11 @@ defaultMain HSTool{..} =
   pkgDump = command "dump" $ info (doDump <$> pkgDbStackParser) idm
     where
       doDump dbs = do
-        pkgs <- concat <$> mapM toolGetInstalledPkgs dbs
+        pkgs <- concat <$> mapM (toolGetInstalledPkgs t) dbs
         putStr $ intercalate "---\n" $ map showInstalledPackageInfo pkgs
 
   pkgInstallLib = command "install-library" $ flip info idm $
-    toolInstallLib <$>
+    toolInstallLib t <$>
       (strOption (long "build-dir" & metavar "PATH")) <*>
       (strOption (long "target-dir" & metavar "PATH")) <*>
       (optional $ strOption (long "dynlib-target-dir" & metavar "PATH")) <*>
@@ -95,11 +76,11 @@ defaultMain HSTool{..} =
   doRegister d = do
     pi <- parseInstalledPackageInfo <$> getContents
     case pi of
-      ParseOk _ a -> toolRegister d a
+      ParseOk _ a -> toolRegister t d a
       ParseFailed e -> putStrLn $ snd $ locatedErrorMsg e
 
   compiler =
-    toolCompile <$>
+    toolCompile t <$>
       (strOption (long "build-dir" & metavar "PATH") <|> pure ".") <*>
       (many $ InstalledPackageId <$> strOption (long "package-id")) <*>
       arguments str (metavar "FILE")

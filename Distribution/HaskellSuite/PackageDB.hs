@@ -1,7 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable,
              TemplateHaskell #-}
-module Distribution.HaskellSuite.PackageDB
-  where
+module Distribution.HaskellSuite.PackageDB where
 
 import Data.Aeson
 import Data.Aeson.TH
@@ -34,7 +33,6 @@ deriveJSON id ''InstalledPackageId
 deriveJSON id ''InstalledPackageInfo_
 
 type Packages = [InstalledPackageInfo]
-type PackageDbLoc = FilePath
 
 data PkgDBError
   = BadPkgDB FilePath
@@ -61,23 +59,3 @@ readDB path = do
     `catch` \e ->
       throwIO $ PkgDBReadError path e
   maybe (throwIO $ BadPkgDB path) return $ decode' cts
-
-locateDB
-  :: PackageDbLoc -- ^ path to the global db
-  -> PackageDbLoc -- ^ path to the user db
-  -> PackageDB
-  -> PackageDbLoc
-locateDB  global _user GlobalPackageDB = global
-locateDB _global  user UserPackageDB = user
-locateDB _global _user (SpecificPackageDB path) = path
-
-findPackage :: InstalledPackageId -> Packages -> Maybe InstalledPackageInfo
-findPackage pkgid = find ((pkgid ==) . installedPackageId)
-
-register :: PackageDbLoc -> InstalledPackageInfo -> IO ()
-register db pkg = do
-  pkgs <- readDB db
-  let pkgid = installedPackageId pkg
-  when (isJust $ findPackage pkgid pkgs) $
-    throwIO $ PkgExists pkgid
-  writeDB db $ pkg:pkgs
