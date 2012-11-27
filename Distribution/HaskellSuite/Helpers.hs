@@ -1,8 +1,9 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, TypeFamilies #-}
 module Distribution.HaskellSuite.Helpers
   ( readPackagesInfo
   , ModuleT
   , runModuleT
+  , MonadModule(..)
   , getModuleInfo
   ) where
 
@@ -36,8 +37,33 @@ readPackagesInfo t dbs pkgIds = do
   allPkgInfos <- concat <$> mapM (toolGetInstalledPkgs t) dbs
   return $ filter ((`Set.member` idSet) . installedPackageId) allPkgInfos
 
+-- MonadModule class
+
+class Monad m => MonadModule m where
+  type ModuleInfo m
+  getModuleCache :: m (Map.Map ModuleName (ModuleInfo m))
+  putModuleCache :: Map.Map ModuleName (ModuleInfo m) -> m ()
+  getPackages :: m Packages
+  readModuleInfo :: [FilePath] -> ModuleName -> m (ModuleInfo m)
+
+getModuleInfo :: MonadModule m => ModuleName -> m (Maybe (ModuleInfo m))
+getModuleInfo name = do
+  cache <- getModuleCache
+  case Map.lookup name cache of
+    Just i -> return $ Just i
+    Nothing -> do
+      pkgs <- getPackages
+      case findModule'sPackage pkgs name of
+        Nothing -> return Nothing
+        Just pkg -> do
+          i <- readModuleInfo (libraryDirs pkg) name
+          putModuleCache $ Map.insert name i cache
+          return $ Just i
+
 findModule'sPackage :: Packages -> ModuleName -> Maybe InstalledPackageInfo
 findModule'sPackage pkgs m = find ((m `elem`) . exposedModules) pkgs
+
+-- ModuleT monad transformer
 
 newtype ModuleT i m a =
   ModuleT
@@ -49,6 +75,14 @@ newtype ModuleT i m a =
 instance MonadTrans (ModuleT i) where
   lift = ModuleT . lift . lift
 
+instance (Functor m, Monad m) => MonadModule (ModuleT i m) where
+  type ModuleInfo (ModuleT i m) = i
+  getModuleCache = ModuleT get
+  putModuleCache = ModuleT . put
+  getPackages = ModuleT $ asks fst
+  readModuleInfo dirs mod =
+    lift =<< ModuleT (asks snd) <*> pure dirs <*> pure mod
+
 runModuleT
   :: ModuleT i m a
   -> Packages
@@ -57,17 +91,3 @@ runModuleT
   -> m (a, Map.Map ModuleName i)
 runModuleT (ModuleT a) pkgs readInfo modMap =
   runReaderT (runStateT a modMap) (pkgs, readInfo)
-
-getModuleInfo :: Monad m => ModuleName -> ModuleT i m (Maybe i)
-getModuleInfo name = ModuleT $ do
-  modMap <- get
-  case Map.lookup name modMap of
-    Just i -> return $ Just i
-    Nothing -> do
-      (pkgs, readInfo) <- ask
-      case findModule'sPackage pkgs name of
-        Nothing -> return Nothing
-        Just pkg -> do
-          i <- lift $ lift $ readInfo (libraryDirs pkg) name
-          put $ Map.insert name i modMap
-          return $ Just i
