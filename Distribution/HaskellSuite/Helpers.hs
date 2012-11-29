@@ -1,10 +1,15 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, TypeFamilies #-}
 module Distribution.HaskellSuite.Helpers
   ( readPackagesInfo
+  -- * Module monads
   , ModuleT
   , runModuleT
   , MonadModule(..)
   , getModuleInfo
+  -- * Useful re-exports
+  , findModuleFile
+  , ModuleName
+  , Text(..)
   ) where
 
 import Distribution.HaskellSuite.PackageDB
