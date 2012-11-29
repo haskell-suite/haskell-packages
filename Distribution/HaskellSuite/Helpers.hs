@@ -4,6 +4,7 @@ module Distribution.HaskellSuite.Helpers
   -- * Module monads
   , ModuleT
   , runModuleT
+  , evalModuleT
   , MonadModule(..)
   , getModuleInfo
   -- * Useful re-exports
@@ -96,3 +97,13 @@ runModuleT
   -> m (a, Map.Map ModuleName i)
 runModuleT (ModuleT a) pkgs readInfo modMap =
   runReaderT (runStateT a modMap) (pkgs, readInfo)
+
+evalModuleT
+  :: Functor m
+  => ModuleT i m a
+  -> Packages
+  -> ([FilePath] -> ModuleName -> m i)
+  -> Map.Map ModuleName i
+  -> m a
+evalModuleT a pkgs readInfo modMap =
+  fst <$> runModuleT a pkgs readInfo modMap
