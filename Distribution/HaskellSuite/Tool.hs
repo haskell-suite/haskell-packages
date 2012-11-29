@@ -2,6 +2,7 @@ module Distribution.HaskellSuite.Tool
   (
     -- * Tool description
     PackageDbLoc
+  , CompileFn
   , Tool(..)
 
     -- * Simple tool
@@ -30,12 +31,15 @@ import Data.List
 
 type PackageDbLoc = FilePath
 
+-- | Compilation function
+type CompileFn = FilePath -> PackageDBStack -> [InstalledPackageId] -> [FilePath] -> IO ()
+
 class Tool tool where
   toolName :: tool -> String
   toolVersion :: tool -> Version
   toolExtensions :: tool -> [String] -- ^ extensions of produced files
   toolGlobalDBLoc :: tool -> IO PackageDbLoc
-  toolCompile :: tool -> FilePath -> [InstalledPackageId] -> [FilePath] -> IO ()
+  toolCompile :: tool -> CompileFn
 
   -- Methods that have default implementations
 
@@ -96,7 +100,7 @@ data SimpleTool = SimpleTool
   { stName :: String
   , stVer :: Version
   , stGlobalDBLoc :: IO PackageDbLoc
-  , stCompile :: (FilePath -> [InstalledPackageId] -> [FilePath] -> IO ())
+  , stCompile :: CompileFn
   , stExts :: [String]
   }
 
@@ -104,7 +108,7 @@ simpleTool
   :: String -- ^ tool name
   -> Version -- ^ tool version
   -> IO PackageDbLoc -- ^ location of global package database
-  -> (FilePath -> [InstalledPackageId] -> [FilePath] -> IO ()) -- ^ compilation function
+  -> CompileFn
   -> [String] -- ^ extensions that generated file have
   -> SimpleTool
 simpleTool = SimpleTool

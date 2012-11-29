@@ -82,6 +82,7 @@ defaultMain t =
   compiler =
     toolCompile t <$>
       (strOption (long "build-dir" & metavar "PATH") <|> pure ".") <*>
+      pkgDbStackParser <*>
       (many $ InstalledPackageId <$> strOption (long "package-id")) <*>
       arguments str (metavar "FILE")
 

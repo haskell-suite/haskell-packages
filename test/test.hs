@@ -7,5 +7,5 @@ main = defaultMain $
     "myTool"
     (Version [3,1,4] [])
     (return "/dev/null")
-    (\dir pkgs args -> print (dir, pkgs, args))
+    (\dir pkgdbs pkgs args -> print (dir, pkgdbs, pkgs, args))
     []
