@@ -82,6 +82,9 @@ newtype ModuleT i m a =
 instance MonadTrans (ModuleT i) where
   lift = ModuleT . lift . lift
 
+instance MonadIO m => MonadIO (ModuleT i m) where
+  liftIO = ModuleT . liftIO
+
 instance (Functor m, Monad m) => MonadModule (ModuleT i m) where
   type ModuleInfo (ModuleT i m) = i
   getModuleCache = ModuleT get
