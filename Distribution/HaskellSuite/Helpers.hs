@@ -7,6 +7,8 @@ module Distribution.HaskellSuite.Helpers
   , evalModuleT
   , MonadModule(..)
   , getModuleInfo
+  , ModName(..)
+  , convertModuleName
   -- * Useful re-exports
   , findModuleFile
   , ModuleName
@@ -48,15 +50,23 @@ readPackagesInfo t dbs pkgIds = do
 
 class Monad m => MonadModule m where
   type ModuleInfo m
-  getModuleCache :: m (Map.Map ModuleName (ModuleInfo m))
-  putModuleCache :: Map.Map ModuleName (ModuleInfo m) -> m ()
+  lookupInCache :: ModName n => n -> m (Maybe (ModuleInfo m))
+  insertInCache :: ModName n => n -> ModuleInfo m -> m ()
   getPackages :: m Packages
-  readModuleInfo :: [FilePath] -> ModuleName -> m (ModuleInfo m)
+  readModuleInfo :: ModName n => [FilePath] -> n -> m (ModuleInfo m)
 
-getModuleInfo :: MonadModule m => ModuleName -> m (Maybe (ModuleInfo m))
+-- | Different libraries (Cabal, haskell-src-exts, ...) use different types
+-- to represent module names. Hence this class.
+class ModName n where
+  modToString :: n -> String
+
+convertModuleName :: (ModName n) => n -> ModuleName
+convertModuleName = fromString . modToString
+
+getModuleInfo :: (MonadModule m, ModName n) => n -> m (Maybe (ModuleInfo m))
 getModuleInfo name = do
-  cache <- getModuleCache
-  case Map.lookup name cache of
+  cached <- lookupInCache name
+  case cached of
     Just i -> return $ Just i
     Nothing -> do
       pkgs <- getPackages
@@ -64,11 +74,11 @@ getModuleInfo name = do
         Nothing -> return Nothing
         Just pkg -> do
           i <- readModuleInfo (libraryDirs pkg) name
-          putModuleCache $ Map.insert name i cache
+          insertInCache name i
           return $ Just i
 
-findModule'sPackage :: Packages -> ModuleName -> Maybe InstalledPackageInfo
-findModule'sPackage pkgs m = find ((m `elem`) . exposedModules) pkgs
+findModule'sPackage :: ModName n => Packages -> n -> Maybe InstalledPackageInfo
+findModule'sPackage pkgs m = find ((convertModuleName m `elem`) . exposedModules) pkgs
 
 -- ModuleT monad transformer
 
@@ -87,11 +97,11 @@ instance MonadIO m => MonadIO (ModuleT i m) where
 
 instance (Functor m, Monad m) => MonadModule (ModuleT i m) where
   type ModuleInfo (ModuleT i m) = i
-  getModuleCache = ModuleT get
-  putModuleCache = ModuleT . put
+  lookupInCache n = ModuleT $ Map.lookup (convertModuleName n) <$> get
+  insertInCache n i = ModuleT $ modify $ Map.insert (convertModuleName n) i
   getPackages = ModuleT $ asks fst
   readModuleInfo dirs mod =
-    lift =<< ModuleT (asks snd) <*> pure dirs <*> pure mod
+    lift =<< ModuleT (asks snd) <*> pure dirs <*> pure (convertModuleName mod)
 
 runModuleT
   :: ModuleT i m a
