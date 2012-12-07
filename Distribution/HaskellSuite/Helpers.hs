@@ -11,9 +11,6 @@ module Distribution.HaskellSuite.Helpers
   , convertModuleName
   -- * Useful re-exports
   , findModuleFile
-  , ModuleName
-  , Text(..)
-  , fromString
   ) where
 
 import Distribution.HaskellSuite.PackageDB
