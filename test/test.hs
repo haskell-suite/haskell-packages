@@ -6,6 +6,6 @@ main = defaultMain $
   simpleTool
     "myTool"
     (Version [3,1,4] [])
-    (return "/dev/null")
+    (return Nothing)
     (\dir pkgdbs pkgs args -> print (dir, pkgdbs, pkgs, args))
     []

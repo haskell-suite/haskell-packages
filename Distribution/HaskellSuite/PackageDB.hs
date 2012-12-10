@@ -38,6 +38,7 @@ data PkgDBError
   = BadPkgDB FilePath
   | PkgDBReadError FilePath IOException
   | PkgExists InstalledPackageId
+  | RegisterNullDB
   deriving (Typeable)
 eprefix = "haskell-suite package manager"
 instance Show PkgDBError where
@@ -48,6 +49,8 @@ instance Show PkgDBError where
       eprefix path (show e)
   show (PkgExists pkgid) =
     printf "%s: package %s is already in the database" eprefix (display pkgid)
+  show (RegisterNullDB) =
+    printf "%s: attempt to register in a null global db" eprefix
 instance Exception PkgDBError
 
 writeDB :: FilePath -> Packages -> IO ()

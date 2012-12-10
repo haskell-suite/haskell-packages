@@ -38,15 +38,15 @@ class Tool tool where
   toolName :: tool -> String
   toolVersion :: tool -> Version
   toolExtensions :: tool -> [String] -- ^ extensions of produced files
-  toolGlobalDBLoc :: tool -> IO PackageDbLoc
+  toolGlobalDBLoc :: tool -> IO (Maybe PackageDbLoc)
   toolCompile :: tool -> CompileFn
 
   -- Methods that have default implementations
 
-  toolLocateDB :: tool -> PackageDB -> IO PackageDbLoc
+  toolLocateDB :: tool -> PackageDB -> IO (Maybe PackageDbLoc)
   toolLocateDB t GlobalPackageDB = toolGlobalDBLoc t
-  toolLocateDB t UserPackageDB = toolUserDBLoc t
-  toolLocateDB _ (SpecificPackageDB p) = return p
+  toolLocateDB t UserPackageDB = Just <$> toolUserDBLoc t
+  toolLocateDB _ (SpecificPackageDB p) = return $ Just p
 
   toolUserDBLoc :: tool -> IO PackageDbLoc
   toolUserDBLoc t =
@@ -54,7 +54,7 @@ class Tool tool where
 
   toolGetInstalledPkgs :: tool -> PackageDB -> IO Packages
   toolGetInstalledPkgs t db =
-    withDBLoc t db $ toolReadPackageDB t
+    withDBLoc t db $ maybe (return []) $ toolReadPackageDB t
 
   toolInstallLib
       :: tool
@@ -75,18 +75,21 @@ class Tool tool where
   toolWritePackageDB _ = writeDB
 
   toolRegister :: tool -> PackageDB -> InstalledPackageInfo -> IO ()
-  toolRegister t db pkg = withDBLoc t db $ \dbloc -> do
-    pkgs <- toolReadPackageDB t dbloc
-    let pkgid = installedPackageId pkg
-    when (isJust $ findPackage pkgid pkgs) $
-      throwIO $ PkgExists pkgid
-    toolWritePackageDB t dbloc $ pkg:pkgs
+  toolRegister t db pkg = withDBLoc t db $ \mbdbloc ->
+    case mbdbloc of
+      Nothing -> throwIO RegisterNullDB
+      Just dbloc -> do
+        pkgs <- toolReadPackageDB t dbloc
+        let pkgid = installedPackageId pkg
+        when (isJust $ findPackage pkgid pkgs) $
+          throwIO $ PkgExists pkgid
+        toolWritePackageDB t dbloc $ pkg:pkgs
 
 withDBLoc
   :: Tool tool
   => tool
   -> PackageDB
-  -> (PackageDbLoc -> IO a)
+  -> (Maybe PackageDbLoc -> IO a)
   -> IO a
 withDBLoc t db f = toolLocateDB t db >>= f
 
@@ -99,7 +102,7 @@ findPackage pkgid = find ((pkgid ==) . installedPackageId)
 data SimpleTool = SimpleTool
   { stName :: String
   , stVer :: Version
-  , stGlobalDBLoc :: IO PackageDbLoc
+  , stGlobalDBLoc :: IO (Maybe PackageDbLoc)
   , stCompile :: CompileFn
   , stExts :: [String]
   }
@@ -107,7 +110,7 @@ data SimpleTool = SimpleTool
 simpleTool
   :: String -- ^ tool name
   -> Version -- ^ tool version
-  -> IO PackageDbLoc -- ^ location of global package database
+  -> IO (Maybe PackageDbLoc) -- ^ location of global package database
   -> CompileFn
   -> [String] -- ^ extensions that generated file have
   -> SimpleTool
