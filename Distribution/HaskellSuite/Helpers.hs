@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, TypeFamilies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, TypeFamilies, FlexibleInstances, TypeSynonymInstances #-}
 module Distribution.HaskellSuite.Helpers
   ( readPackagesInfo
   -- * Module monads
@@ -56,6 +56,9 @@ class Monad m => MonadModule m where
 -- to represent module names. Hence this class.
 class ModName n where
   modToString :: n -> String
+
+instance ModName String where
+  modToString = id
 
 convertModuleName :: (ModName n) => n -> ModuleName
 convertModuleName = fromString . modToString
