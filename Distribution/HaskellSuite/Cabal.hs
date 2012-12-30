@@ -1,9 +1,11 @@
 -- | This module provides Cabal integration.
+{-# LANGUAGE DeriveDataTypeable #-}
 
 module Distribution.HaskellSuite.Cabal
   ( defaultMain )
   where
 
+import Data.Typeable
 import Data.Version
 import Data.List
 import Data.Monoid
@@ -18,10 +20,14 @@ import Distribution.Text
 import Distribution.ModuleName
 import Options.Applicative
 import Control.Monad
+import Control.Monad.Trans.Either
+import Control.Exception
 import Text.Printf
 import Distribution.HaskellSuite.Tool
 import Language.Preprocessor.Cpphs
 import Paths_haskell_packages as Our (version)
+import System.FilePath
+import System.Directory
 
 defaultMain :: Tool tool => tool -> IO ()
 defaultMain t =
@@ -83,12 +89,36 @@ defaultMain t =
       ParseFailed e -> putStrLn $ snd $ locatedErrorMsg e
 
   compiler =
-    toolCompile t <$>
+    (\srcDirs buildDir cppOpts dbStack pkgids mods ->
+        toolCompile t buildDir cppOpts dbStack pkgids =<< findModules srcDirs mods) <$>
+      (many $ strOption (short 'i' & metavar "PATH")) <*>
       (strOption (long "build-dir" & metavar "PATH") <|> pure ".") <*>
       cppOptsParser <*>
       pkgDbStackParser <*>
       (many $ InstalledPackageId <$> strOption (long "package-id")) <*>
-      arguments str (metavar "FILE")
+      arguments str (metavar "MODULE")
+
+data ModuleNotFound = ModuleNotFound String
+  deriving Typeable
+
+instance Show ModuleNotFound where
+  show (ModuleNotFound mod) = printf "Module %s not found" mod
+instance Exception ModuleNotFound
+
+findModules srcDirs = mapM (findModule srcDirs)
+findModule srcDirs mod = do
+  r <- runEitherT $ mapM_ checkInDir srcDirs
+  case r of
+    Left found -> return found
+    Right {} -> throwIO $ ModuleNotFound mod
+
+  where
+    checkInDir dir = EitherT $ do
+      let file = dir </> toFilePath (fromString mod) <.> "hs"
+      found <- doesFileExist file
+      return $ if found
+        then Left file
+        else Right ()
 
 pkgDbParser :: Parser PackageDB
 pkgDbParser =
