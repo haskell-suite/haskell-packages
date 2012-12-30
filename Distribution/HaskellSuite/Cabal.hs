@@ -10,6 +10,8 @@ import Data.Monoid
 import Distribution.Simple.Compiler
 import Distribution.Verbosity
 import Distribution.InstalledPackageInfo
+  ( showInstalledPackageInfo
+  , parseInstalledPackageInfo )
 import Distribution.ParseUtils
 import Distribution.Package
 import Distribution.Text
@@ -18,6 +20,7 @@ import Options.Applicative
 import Control.Monad
 import Text.Printf
 import Distribution.HaskellSuite.Tool
+import Language.Preprocessor.Cpphs
 import Paths_haskell_packages as Our (version)
 
 defaultMain :: Tool tool => tool -> IO ()
@@ -82,6 +85,7 @@ defaultMain t =
   compiler =
     toolCompile t <$>
       (strOption (long "build-dir" & metavar "PATH") <|> pure ".") <*>
+      cppOptsParser <*>
       pkgDbStackParser <*>
       (many $ InstalledPackageId <$> strOption (long "package-id")) <*>
       arguments str (metavar "FILE")
@@ -96,3 +100,23 @@ pkgDbStackParser :: Parser PackageDBStack
 pkgDbStackParser =
   (\fs -> if null fs then [GlobalPackageDB] else fs) <$>
     many pkgDbParser
+
+cppOptsParser :: Parser CpphsOptions
+cppOptsParser = appEndo <$> allMod <*> pure defaultCpphsOptions
+  where
+    allMod = fmap mconcat $ many $ define <|> includeDir
+
+    define =
+      flip fmap (strOption (short 'D' <> metavar "sym[=var]")) $
+      \str ->
+        let
+          def :: (String, String)
+          def =
+            case span (/= '=') str of
+              (_, []) -> (str, "")
+              (sym, _:var) -> (sym, var)
+          in Endo $ \opts -> opts { defines = def : defines opts }
+
+    includeDir =
+      flip fmap (strOption (short 'I' <> metavar "PATH")) $
+      \str -> Endo $ \opts -> opts { includes = str : includes opts }
