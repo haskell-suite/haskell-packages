@@ -29,11 +29,12 @@ import Control.Exception
 import Data.Maybe
 import Data.List
 import Language.Preprocessor.Cpphs (CpphsOptions)
+import Language.Haskell.Exts.Extension
 
 type PackageDbLoc = FilePath
 
 -- | Compilation function
-type CompileFn = FilePath -> CpphsOptions -> PackageDBStack -> [InstalledPackageId] -> [FilePath] -> IO ()
+type CompileFn = FilePath -> [Extension] -> CpphsOptions -> PackageDBStack -> [InstalledPackageId] -> [FilePath] -> IO ()
 
 class Tool tool where
   toolName :: tool -> String

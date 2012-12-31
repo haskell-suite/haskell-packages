@@ -9,7 +9,7 @@ main = defaultMain $
     "myTool"
     (Version [3,1,4] [])
     (return Nothing)
-    (\dir opts pkgdbs pkgs args -> print (dir, opts, pkgdbs, pkgs, args))
+    (\dir exts opts pkgdbs pkgs args -> print (dir, exts, opts, pkgdbs, pkgs, args))
     []
 
 deriving instance Show CpphsOptions

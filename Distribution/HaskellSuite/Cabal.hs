@@ -25,6 +25,7 @@ import Control.Exception
 import Text.Printf
 import Distribution.HaskellSuite.Tool
 import Language.Preprocessor.Cpphs
+import Language.Haskell.Exts.Extension
 import Paths_haskell_packages as Our (version)
 import System.FilePath
 import System.Directory
@@ -89,10 +90,11 @@ defaultMain t =
       ParseFailed e -> putStrLn $ snd $ locatedErrorMsg e
 
   compiler =
-    (\srcDirs buildDir cppOpts dbStack pkgids mods ->
-        toolCompile t buildDir cppOpts dbStack pkgids =<< findModules srcDirs mods) <$>
+    (\srcDirs buildDir exts cppOpts dbStack pkgids mods ->
+        toolCompile t buildDir exts cppOpts dbStack pkgids =<< findModules srcDirs mods) <$>
       (many $ strOption (short 'i' & metavar "PATH")) <*>
       (strOption (long "build-dir" & metavar "PATH") <|> pure ".") <*>
+      (many $ option (short 'X' & metavar "extension")) <*>
       cppOptsParser <*>
       pkgDbStackParser <*>
       (many $ InstalledPackageId <$> strOption (long "package-id")) <*>
