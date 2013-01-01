@@ -40,6 +40,7 @@ defaultMain t =
       [ version
       , numericVersion
       , hspkgVersion
+      , supportedExtensions
       , subparser pkgCommand
       , compiler]
 
@@ -55,6 +56,11 @@ defaultMain t =
     flag'
       (putStrLn ourVersionStr)
       (long "hspkg-version")
+
+  supportedExtensions =
+    flag'
+      (mapM_ print $ toolLanguageExtensions t)
+      (long "supported-extensions")
 
   version =
     flag'
