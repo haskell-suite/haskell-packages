@@ -115,14 +115,16 @@ instance Exception ModuleNotFound
 
 findModules srcDirs = mapM (findModule srcDirs)
 findModule srcDirs mod = do
-  r <- runEitherT $ mapM_ checkInDir srcDirs
+  r <- runEitherT $ sequence_ (checkInDir <$> srcDirs <*> exts)
   case r of
     Left found -> return found
     Right {} -> throwIO $ ModuleNotFound mod
 
   where
-    checkInDir dir = EitherT $ do
-      let file = dir </> toFilePath (fromString mod) <.> "hs"
+    exts = ["hs", "lhs"]
+
+    checkInDir dir ext = EitherT $ do
+      let file = dir </> toFilePath (fromString mod) <.> ext
       found <- doesFileExist file
       return $ if found
         then Left file
