@@ -28,7 +28,7 @@ import Control.Monad
 import Control.Exception
 import Data.Maybe
 import Data.List
-import Language.Preprocessor.Cpphs (CpphsOptions)
+import Language.Haskell.Exts.Annotated.CPP
 import Language.Haskell.Exts.Extension
 
 type PackageDbLoc = FilePath

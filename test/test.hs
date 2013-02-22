@@ -2,7 +2,7 @@
 import Distribution.HaskellSuite.Cabal
 import Distribution.HaskellSuite.Tool
 import Data.Version
-import Language.Preprocessor.Cpphs
+import Language.Haskell.Exts.Annotated.CPP
 
 main = defaultMain $
   simpleTool

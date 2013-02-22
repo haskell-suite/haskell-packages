@@ -21,9 +21,9 @@ library
     Distribution.HaskellSuite.Cabal
     Distribution.HaskellSuite.Helpers
   other-modules:       Paths_haskell_packages
-  build-depends:       base ==4.6.*, optparse-applicative ==0.4.*, aeson ==0.6.*, bytestring ==0.10.*, Cabal ==1.17.*, deepseq, directory, filepath, containers, mtl, cpphs, EitherT, haskell-src-exts
+  build-depends:       base ==4.6.*, optparse-applicative ==0.4.*, aeson ==0.6.*, bytestring ==0.10.*, Cabal ==1.17.*, deepseq, directory, filepath, containers, mtl, hse-cpp, EitherT, haskell-src-exts
 
 executable test
-  build-depends:       base, Cabal, haskell-packages, cpphs
+  build-depends:       base, Cabal, haskell-packages, hse-cpp
   hs-source-dirs: test
   main-is: test.hs

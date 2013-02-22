@@ -24,7 +24,7 @@ import Control.Monad.Trans.Either
 import Control.Exception
 import Text.Printf
 import Distribution.HaskellSuite.Tool
-import Language.Preprocessor.Cpphs
+import Language.Haskell.Exts.Annotated.CPP
 import Language.Haskell.Exts.Extension
 import Paths_haskell_packages as Our (version)
 import System.FilePath
