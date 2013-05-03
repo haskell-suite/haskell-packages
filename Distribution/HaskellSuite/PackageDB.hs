@@ -5,7 +5,8 @@ module Distribution.HaskellSuite.PackageDB where
 import Data.Aeson
 import Data.Aeson.TH
 import Control.Applicative
-import qualified Data.ByteString.Lazy as BS
+import qualified Data.ByteString      as BS
+import qualified Data.ByteString.Lazy as LBS
 import Control.Exception as E
 import Control.Monad
 import Control.DeepSeq
@@ -54,11 +55,11 @@ instance Show PkgDBError where
 instance Exception PkgDBError
 
 writeDB :: FilePath -> Packages -> IO ()
-writeDB path db = BS.writeFile path $ encode db
+writeDB path db = LBS.writeFile path $ encode db
 
 readDB :: FilePath -> IO Packages
 readDB path = do
-  cts <- evaluate . force =<< BS.readFile path
+  cts <- LBS.fromChunks . return <$> BS.readFile path
     `E.catch` \e ->
       throwIO $ PkgDBReadError path e
   maybe (throwIO $ BadPkgDB path) return $ decode' cts
