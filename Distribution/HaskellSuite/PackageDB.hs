@@ -6,7 +6,7 @@ import Data.Aeson
 import Data.Aeson.TH
 import Control.Applicative
 import qualified Data.ByteString.Lazy as BS
-import Control.Exception
+import Control.Exception as E
 import Control.Monad
 import Control.DeepSeq
 import Data.Typeable
@@ -59,6 +59,6 @@ writeDB path db = BS.writeFile path $ encode db
 readDB :: FilePath -> IO Packages
 readDB path = do
   cts <- evaluate . force =<< BS.readFile path
-    `catch` \e ->
+    `E.catch` \e ->
       throwIO $ PkgDBReadError path e
   maybe (throwIO $ BadPkgDB path) return $ decode' cts

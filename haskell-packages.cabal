@@ -22,7 +22,7 @@ library
     Distribution.HaskellSuite.Helpers
   other-modules:       Paths_haskell_packages
   build-depends:
-      base ==4.6.*
+      base >=4.5 && <4.7
     , optparse-applicative ==0.4.*
     , aeson ==0.6.*
     , bytestring ==0.10.*
