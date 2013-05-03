@@ -18,6 +18,7 @@ import Text.Printf
 import Distribution.InstalledPackageInfo
 import Distribution.Package
 import Distribution.Text
+import System.Directory
 
 -- The following imports are needed only for generation of JSON instances
 import Data.Version (Version(..))
@@ -54,12 +55,31 @@ instance Show PkgDBError where
     printf "%s: attempt to register in a null global db" eprefix
 instance Exception PkgDBError
 
+data MaybeInitDB = InitDB | Don'tInitDB
+
 writeDB :: FilePath -> Packages -> IO ()
 writeDB path db = LBS.writeFile path $ encode db
 
-readDB :: FilePath -> IO Packages
-readDB path = do
+-- | Read a package database.
+--
+-- If the database does not exist, then the first argument tells whether we
+-- should create and initialize it with an empty package list. In that
+-- case, if 'Don'tInitDB' is specified, a 'BadPkgDb' exception is thrown.
+readDB :: MaybeInitDB -> FilePath -> IO Packages
+readDB maybeInit path = do
+  maybeDoInitDB
+
   cts <- LBS.fromChunks . return <$> BS.readFile path
     `E.catch` \e ->
       throwIO $ PkgDBReadError path e
   maybe (throwIO $ BadPkgDB path) return $ decode' cts
+
+  where
+    maybeDoInitDB
+      | InitDB <- maybeInit = do
+          dbExists <- doesFileExist path
+
+          unless dbExists $ do
+            writeDB path []
+
+      | otherwise = return ()

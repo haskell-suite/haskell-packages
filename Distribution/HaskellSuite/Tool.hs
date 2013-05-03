@@ -72,7 +72,7 @@ class Tool tool where
       >>= installOrdinaryFiles normal targetDir
 
   toolReadPackageDB :: tool -> PackageDbLoc -> IO Packages
-  toolReadPackageDB _ = readDB
+  toolReadPackageDB _ = readDB InitDB
 
   toolWritePackageDB :: tool -> PackageDbLoc -> Packages -> IO ()
   toolWritePackageDB _ = writeDB
