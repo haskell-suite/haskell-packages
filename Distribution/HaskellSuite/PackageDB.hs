@@ -1,6 +1,13 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable,
              TemplateHaskell #-}
-module Distribution.HaskellSuite.PackageDB where
+module Distribution.HaskellSuite.PackageDB
+  ( Packages
+  , writeDB
+  , readDB
+  , MaybeInitDB(..)
+  , PkgDBError(..)
+  )
+  where
 
 import Data.Aeson
 import Data.Aeson.TH
