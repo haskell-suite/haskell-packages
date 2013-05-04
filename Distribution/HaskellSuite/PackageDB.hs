@@ -6,6 +6,7 @@ module Distribution.HaskellSuite.PackageDB
   , readDB
   , MaybeInitDB(..)
   , PkgDBError(..)
+  , errPrefix
   )
   where
 
@@ -49,17 +50,17 @@ data PkgDBError
   | PkgExists InstalledPackageId
   | RegisterNullDB
   deriving (Typeable)
-eprefix = "haskell-suite package manager"
+errPrefix = "haskell-suite package manager"
 instance Show PkgDBError where
   show (BadPkgDB path) =
-    printf "%s: bad package database at %s" eprefix path
+    printf "%s: bad package database at %s" errPrefix path
   show (PkgDBReadError path e) =
     printf "%s: package db at %s could not be read: %s"
-      eprefix path (show e)
+      errPrefix path (show e)
   show (PkgExists pkgid) =
-    printf "%s: package %s is already in the database" eprefix (display pkgid)
+    printf "%s: package %s is already in the database" errPrefix (display pkgid)
   show (RegisterNullDB) =
-    printf "%s: attempt to register in a null global db" eprefix
+    printf "%s: attempt to register in a null global db" errPrefix
 instance Exception PkgDBError
 
 data MaybeInitDB = InitDB | Don'tInitDB
