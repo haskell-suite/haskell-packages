@@ -42,7 +42,7 @@ class Tool tool where
   toolExtensions :: tool -> [String] -- ^ extensions of produced files
   toolGlobalDBLoc :: tool -> IO (Maybe PackageDbLoc)
   toolCompile :: tool -> CompileFn
-  toolLanguageExtensions :: tool -> [Extension]
+  toolLanguageExtensions :: tool -> [KnownExtension]
 
   -- Methods that have default implementations
 
@@ -105,7 +105,7 @@ findPackage pkgid = find ((pkgid ==) . installedPackageId)
 data SimpleTool = SimpleTool
   { stName :: String
   , stVer :: Version
-  , stLangExts :: [Extension]
+  , stLangExts :: [KnownExtension]
   , stGlobalDBLoc :: IO (Maybe PackageDbLoc)
   , stCompile :: CompileFn
   , stExts :: [String]
@@ -114,7 +114,7 @@ data SimpleTool = SimpleTool
 simpleTool
   :: String -- ^ tool name
   -> Version -- ^ tool version
-  -> [Extension]
+  -> [KnownExtension]
   -> IO (Maybe PackageDbLoc) -- ^ location of global package database
   -> CompileFn
   -> [String] -- ^ extensions that generated file have

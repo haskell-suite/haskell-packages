@@ -100,7 +100,7 @@ defaultMain t =
         toolCompile t buildDir exts cppOpts dbStack pkgids =<< findModules srcDirs mods) <$>
       (many $ strOption (short 'i' & metavar "PATH")) <*>
       (strOption (long "build-dir" & metavar "PATH") <|> pure ".") <*>
-      (many $ option (short 'X' & metavar "extension")) <*>
+      (many $ parseExtension <$> strOption (short 'X' & metavar "extension")) <*>
       cppOptsParser <*>
       pkgDbStackParser <*>
       (many $ InstalledPackageId <$> strOption (long "package-id")) <*>
