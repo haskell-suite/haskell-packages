@@ -1,4 +1,6 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, TypeFamilies, FlexibleInstances, TypeSynonymInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, TypeFamilies,
+             FlexibleInstances, TypeSynonymInstances,
+             DeriveDataTypeable #-}
 module Distribution.HaskellSuite.Helpers
   ( readPackagesInfo
   -- * Module monads
@@ -31,17 +33,35 @@ import Control.Monad.Reader
 import Control.Exception
 import Data.Maybe
 import Data.List
-import qualified Data.Set as Set
+import Data.Typeable
 import qualified Data.Map as Map
 import Distribution.HaskellSuite.Tool
+import Text.Printf
+
+data PkgInfoError = PkgInfoNotFound InstalledPackageId
+  deriving Typeable
+instance Exception PkgInfoError
+instance Show PkgInfoError where
+  show (PkgInfoNotFound pkgid) =
+    printf "%s: package not found: %s" errPrefix (display pkgid)
 
 readPackagesInfo
   :: Tool tool
   => tool -> [PackageDB] -> [InstalledPackageId] -> IO Packages
 readPackagesInfo t dbs pkgIds = do
-  let idSet = Set.fromList pkgIds
   allPkgInfos <- concat <$> mapM (toolGetInstalledPkgs t) dbs
-  return $ filter ((`Set.member` idSet) . installedPackageId) allPkgInfos
+  let
+    pkgMap =
+      Map.fromList
+        [ (installedPackageId pkgInfo, pkgInfo)
+        | pkgInfo <- allPkgInfos
+        ]
+  forM pkgIds $ \pkgId ->
+    maybe
+      (throwIO $ PkgInfoNotFound pkgId)
+      return
+      (Map.lookup pkgId pkgMap)
+  -- return $ filter ((`Set.member` idSet) . installedPackageId) allPkgInfos
 
 -- MonadModule class
 
