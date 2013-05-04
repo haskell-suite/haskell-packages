@@ -18,20 +18,15 @@ module Distribution.HaskellSuite.Helpers
 import Distribution.HaskellSuite.PackageDB
 import Distribution.Simple.Compiler
 import Distribution.Simple.Utils
-import Distribution.Verbosity
 import Distribution.InstalledPackageInfo
-import Distribution.ParseUtils
 import Distribution.Package
 import Distribution.Text
 import Distribution.ModuleName
-import System.FilePath
-import System.Directory
 import Control.Applicative
 import Control.Monad
 import Control.Monad.State
 import Control.Monad.Reader
 import Control.Exception
-import Data.Maybe
 import Data.List
 import Data.Typeable
 import qualified Data.Map as Map
