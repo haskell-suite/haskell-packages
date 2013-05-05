@@ -75,6 +75,9 @@ class ModName n where
 instance ModName String where
   modToString = id
 
+instance ModName ModuleName where
+  modToString = display
+
 convertModuleName :: (ModName n) => n -> ModuleName
 convertModuleName = fromString . modToString
 
