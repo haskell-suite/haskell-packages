@@ -1,7 +1,11 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable,
-             TemplateHaskell #-}
+             TemplateHaskell, ScopedTypeVariables #-}
 module Distribution.HaskellSuite.PackageDB
   ( Packages
+  , IsPackageDB(..)
+  , IsDBName(..)
+  , StandardDB(..)
+  , getInstalledPackages
   , writeDB
   , readDB
   , MaybeInitDB(..)
@@ -22,10 +26,13 @@ import Data.Typeable
 import Data.Monoid
 import Data.Maybe
 import Data.List
+import Data.Tagged
+import Data.Proxy
 import Text.Printf
 import Distribution.InstalledPackageInfo
 import Distribution.Package
 import Distribution.Text
+import System.FilePath
 import System.Directory
 
 -- The following imports are needed only for generation of JSON instances
@@ -68,11 +75,6 @@ data MaybeInitDB = InitDB | Don'tInitDB
 writeDB :: FilePath -> Packages -> IO ()
 writeDB path db = LBS.writeFile path $ encode db
 
--- | Read a package database.
---
--- If the database does not exist, then the first argument tells whether we
--- should create and initialize it with an empty package list. In that
--- case, if 'Don'tInitDB' is specified, a 'BadPkgDb' exception is thrown.
 readDB :: MaybeInitDB -> FilePath -> IO Packages
 readDB maybeInit path = do
   maybeDoInitDB
@@ -91,3 +93,70 @@ readDB maybeInit path = do
             writeDB path []
 
       | otherwise = return ()
+
+class IsPackageDB db where
+
+  -- | The name of the database. Used to construct some paths.
+  dbName :: Tagged db String
+
+  -- | Read a package database.
+  --
+  -- If the database does not exist, then the first argument tells whether
+  -- we should create and initialize it with an empty package list. In
+  -- that case, if 'Don'tInitDB' is specified, a 'BadPkgDb' exception is
+  -- thrown.
+  readPackageDB :: MaybeInitDB -> db -> IO Packages
+
+  -- | Write a package database
+  writePackageDB :: db -> Packages -> IO ()
+
+  -- | Get the location of a global package database (if there's one)
+  globalDB :: IO (Maybe db)
+
+  -- | Create a db object given a database file path
+  dbFromPath :: FilePath -> IO db
+
+  -- Methods that have default implementations
+
+  -- | Convert a package db specification to a db object
+  locateDB :: PackageDB -> IO (Maybe db)
+  locateDB GlobalPackageDB = globalDB
+  locateDB UserPackageDB = Just <$> userDB
+  locateDB (SpecificPackageDB p) = Just <$> dbFromPath p
+
+  -- | The user database
+  userDB :: IO db
+  userDB = do
+    let name = untag (dbName :: Tagged db String)
+    path <- (</>) <$> haskellPackagesDir <*> pure (name <.> "db")
+    dbFromPath path
+
+haskellPackagesDir :: IO FilePath
+haskellPackagesDir = getAppUserDataDirectory "haskell-packages"
+
+class IsDBName name where
+  getDBName :: Tagged name String
+
+data StandardDB name = StandardDB FilePath
+
+instance IsDBName name => IsPackageDB (StandardDB name) where
+  dbName = retag (getDBName :: Tagged name String)
+
+  readPackageDB init (StandardDB db) = readDB init db
+  writePackageDB (StandardDB db) = writeDB db
+  globalDB = return Nothing
+  dbFromPath path = return $ StandardDB path
+
+getInstalledPackages
+  :: forall db. IsPackageDB db
+  => MaybeInitDB
+  -> Proxy db
+  -> PackageDB
+  -> IO Packages
+getInstalledPackages initDb _proxy dbspec = do
+  mbDb <- locateDB dbspec
+
+  maybe
+    (return [])
+    (readPackageDB initDb)
+    (mbDb :: Maybe db)

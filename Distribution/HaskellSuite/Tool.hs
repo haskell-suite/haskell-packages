@@ -1,13 +1,13 @@
+{-# LANGUAGE TypeFamilies, FlexibleContexts, ScopedTypeVariables #-}
 module Distribution.HaskellSuite.Tool
   (
     -- * Tool description
-    PackageDbLoc
-  , CompileFn
-  , Tool(..)
+    CompileFn
+  , IsCompiler(..)
 
-    -- * Simple tool
-  , SimpleTool
-  , simpleTool
+    -- * Simple compiler
+  , SimpleCompiler
+  , simpleCompiler
   )
   where
 
@@ -31,36 +31,23 @@ import Data.List
 import Language.Haskell.Exts.Annotated.CPP
 import Language.Haskell.Exts.Extension
 
-type PackageDbLoc = FilePath
-
 -- | Compilation function
 type CompileFn = FilePath -> [Extension] -> CpphsOptions -> PackageDBStack -> [InstalledPackageId] -> [FilePath] -> IO ()
 
-class Tool tool where
-  toolName :: tool -> String
-  toolVersion :: tool -> Version
-  toolExtensions :: tool -> [String] -- ^ extensions of produced files
-  toolGlobalDBLoc :: tool -> IO (Maybe PackageDbLoc)
-  toolCompile :: tool -> CompileFn
-  toolLanguageExtensions :: tool -> [Extension]
+class
+  IsPackageDB (CompilerDB compiler) =>
+  IsCompiler compiler where
 
-  -- Methods that have default implementations
+  type CompilerDB compiler
 
-  toolLocateDB :: tool -> PackageDB -> IO (Maybe PackageDbLoc)
-  toolLocateDB t GlobalPackageDB = toolGlobalDBLoc t
-  toolLocateDB t UserPackageDB = Just <$> toolUserDBLoc t
-  toolLocateDB _ (SpecificPackageDB p) = return $ Just p
-
-  toolUserDBLoc :: tool -> IO PackageDbLoc
-  toolUserDBLoc t =
-    (</>) <$> haskellPackagesDir <*> pure (toolName t <.> "db")
-
-  toolGetInstalledPkgs :: tool -> PackageDB -> IO Packages
-  toolGetInstalledPkgs t db =
-    withDBLoc t db $ maybe (return []) $ toolReadPackageDB t
+  toolName :: compiler -> String
+  toolVersion :: compiler -> Version
+  toolExtensions :: compiler -> [String] -- ^ extensions of produced files
+  toolCompile :: compiler -> CompileFn
+  toolLanguageExtensions :: compiler -> [Extension]
 
   toolInstallLib
-      :: tool
+      :: compiler
       -> FilePath -- ^ build dir
       -> FilePath -- ^ target dir
       -> Maybe FilePath -- ^ target dir for dynamic libraries
@@ -71,60 +58,48 @@ class Tool tool where
     findModuleFiles [buildDir] (toolExtensions t) mods
       >>= installOrdinaryFiles normal targetDir
 
-  toolReadPackageDB :: tool -> PackageDbLoc -> IO Packages
-  toolReadPackageDB _ = readDB InitDB
+  toolRegister
+    :: compiler
+    -> PackageDB
+    -> InstalledPackageInfo
+    -> IO ()
+  toolRegister t dbspec pkg = do
+    mbDb <- locateDB dbspec
 
-  toolWritePackageDB :: tool -> PackageDbLoc -> Packages -> IO ()
-  toolWritePackageDB _ = writeDB
-
-  toolRegister :: tool -> PackageDB -> InstalledPackageInfo -> IO ()
-  toolRegister t db pkg = withDBLoc t db $ \mbdbloc ->
-    case mbdbloc of
+    case mbDb :: Maybe (CompilerDB compiler) of
       Nothing -> throwIO RegisterNullDB
-      Just dbloc -> do
-        pkgs <- toolReadPackageDB t dbloc
+      Just db -> do
+        pkgs <- readPackageDB InitDB db
         let pkgid = installedPackageId pkg
         when (isJust $ findPackage pkgid pkgs) $
           throwIO $ PkgExists pkgid
-        toolWritePackageDB t dbloc $ pkg:pkgs
-
-withDBLoc
-  :: Tool tool
-  => tool
-  -> PackageDB
-  -> (Maybe PackageDbLoc -> IO a)
-  -> IO a
-withDBLoc t db f = toolLocateDB t db >>= f
-
-haskellPackagesDir :: IO FilePath
-haskellPackagesDir = getAppUserDataDirectory "haskell-packages"
+        writePackageDB db $ pkg:pkgs
 
 findPackage :: InstalledPackageId -> Packages -> Maybe InstalledPackageInfo
 findPackage pkgid = find ((pkgid ==) . installedPackageId)
 
-data SimpleTool = SimpleTool
+data SimpleCompiler db = SimpleCompiler
   { stName :: String
   , stVer :: Version
   , stLangExts :: [Extension]
-  , stGlobalDBLoc :: IO (Maybe PackageDbLoc)
   , stCompile :: CompileFn
   , stExts :: [String]
   }
 
-simpleTool
+simpleCompiler
   :: String -- ^ tool name
   -> Version -- ^ tool version
   -> [Extension]
-  -> IO (Maybe PackageDbLoc) -- ^ location of global package database
   -> CompileFn
   -> [String] -- ^ extensions that generated file have
-  -> SimpleTool
-simpleTool = SimpleTool
+  -> SimpleCompiler db
+simpleCompiler = SimpleCompiler
 
-instance Tool SimpleTool where
+instance IsPackageDB db => IsCompiler (SimpleCompiler db) where
+  type CompilerDB (SimpleCompiler db) = db
+
   toolName = stName
   toolVersion = stVer
   toolExtensions = stExts
-  toolGlobalDBLoc = stGlobalDBLoc
   toolCompile = stCompile
   toolLanguageExtensions = stLangExts

@@ -1,5 +1,5 @@
 -- | This module provides Cabal integration.
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables #-}
 
 module Distribution.HaskellSuite.Cabal
   ( defaultMain )
@@ -9,6 +9,7 @@ import Data.Typeable
 import Data.Version
 import Data.List
 import Data.Monoid
+import Data.Proxy
 import Distribution.Simple.Compiler
 import Distribution.Verbosity
 import Distribution.InstalledPackageInfo
@@ -24,13 +25,16 @@ import Control.Monad.Trans.Either
 import Control.Exception
 import Text.Printf
 import Distribution.HaskellSuite.Tool
+import Distribution.HaskellSuite.PackageDB
 import Language.Haskell.Exts.Annotated.CPP
 import Language.Haskell.Exts.Extension
 import Paths_haskell_packages as Our (version)
 import System.FilePath
 import System.Directory
 
-defaultMain :: Tool tool => tool -> IO ()
+defaultMain
+  :: forall c . IsCompiler c
+  => c -> IO ()
 defaultMain t =
   join $ execParser $ info (helper <*> optParser) idm
   where
@@ -74,7 +78,13 @@ defaultMain t =
   pkgDump = command "dump" $ info (doDump <$> pkgDbStackParser) idm
     where
       doDump dbs = do
-        pkgs <- concat <$> mapM (toolGetInstalledPkgs t) dbs
+        pkgs <-
+          fmap concat $
+          forM dbs $ \db ->
+            getInstalledPackages
+              InitDB
+              (Proxy :: Proxy (CompilerDB c))
+              db
         putStr $ intercalate "---\n" $ map showInstalledPackageInfo pkgs
 
   pkgInstallLib = command "install-library" $ flip info idm $

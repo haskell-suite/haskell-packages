@@ -36,6 +36,7 @@ library
     , hse-cpp
     , EitherT
     , haskell-src-exts >= 1.14
+    , tagged
 
 executable test
   default-language:    Haskell2010

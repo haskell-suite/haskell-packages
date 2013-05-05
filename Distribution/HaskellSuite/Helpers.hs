@@ -29,6 +29,7 @@ import Control.Monad.Reader
 import Control.Exception
 import Data.List
 import Data.Typeable
+import Data.Proxy
 import qualified Data.Map as Map
 import Distribution.HaskellSuite.Tool
 import Text.Printf
@@ -41,10 +42,10 @@ instance Show PkgInfoError where
     printf "%s: package not found: %s" errPrefix (display pkgid)
 
 readPackagesInfo
-  :: Tool tool
-  => tool -> [PackageDB] -> [InstalledPackageId] -> IO Packages
-readPackagesInfo t dbs pkgIds = do
-  allPkgInfos <- concat <$> mapM (toolGetInstalledPkgs t) dbs
+  :: IsPackageDB db
+  => MaybeInitDB -> Proxy db -> [PackageDB] -> [InstalledPackageId] -> IO Packages
+readPackagesInfo initDb proxyDb dbs pkgIds = do
+  allPkgInfos <- concat <$> mapM (getInstalledPackages initDb proxyDb) dbs
   let
     pkgMap =
       Map.fromList
