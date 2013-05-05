@@ -59,7 +59,7 @@ defaultMain t =
 
   supportedExtensions =
     flag'
-      (mapM_ print $ toolLanguageExtensions t)
+      (mapM_ (putStrLn . prettyExtension) $ toolLanguageExtensions t)
       (long "supported-extensions")
 
   version =
