@@ -11,11 +11,15 @@ module Distribution.HaskellSuite.Compiler
     -- * Simple compiler
   , Simple
   , simple
+
+    -- * Command line
+  , defaultMain
   )
   where
 
 import Data.Version
 import Distribution.HaskellSuite.PackageDB
+import {-# SOURCE #-} Distribution.HaskellSuite.Cabal
 import Distribution.Simple.Compiler
 import Distribution.Simple.Utils
 import Distribution.Verbosity
