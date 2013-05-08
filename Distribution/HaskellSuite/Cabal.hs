@@ -2,7 +2,7 @@
 {-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables #-}
 
 module Distribution.HaskellSuite.Cabal
-  ( defaultMain )
+  ( main )
   where
 
 import Data.Typeable
@@ -17,7 +17,7 @@ import Distribution.InstalledPackageInfo
 import Distribution.ParseUtils
 import Distribution.Package
 import Distribution.Text
-import Distribution.ModuleName
+import Distribution.ModuleName hiding (main)
 import Options.Applicative
 import Control.Monad
 import Control.Monad.Trans.Either
@@ -31,10 +31,10 @@ import Paths_haskell_packages as Our (version)
 import System.FilePath
 import System.Directory
 
-defaultMain
+main
   :: forall c . Compiler.Is c
   => c -> IO ()
-defaultMain t =
+main t =
   join $ execParser $ info (helper <*> optParser) idm
   where
 

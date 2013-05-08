@@ -1,9 +1,7 @@
-module Distribution.HaskellSuite.Cabal
-  ( defaultMain )
-  where
+module Distribution.HaskellSuite.Cabal where
 
 import {-# SOURCE #-} qualified Distribution.HaskellSuite.Compiler as Compiler
 
-defaultMain
+main
   :: Compiler.Is c
   => c -> IO ()

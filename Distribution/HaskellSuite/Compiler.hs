@@ -13,7 +13,7 @@ module Distribution.HaskellSuite.Compiler
   , simple
 
     -- * Command line
-  , defaultMain
+  , main
   )
   where
 
