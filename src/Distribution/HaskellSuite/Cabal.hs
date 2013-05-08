@@ -88,11 +88,17 @@ main t =
 
   pkgInstallLib = command "install-library" $ flip info idm $
     Compiler.installLib t <$>
-      (strOption (long "build-dir" & metavar "PATH")) <*>
-      (strOption (long "target-dir" & metavar "PATH")) <*>
-      (optional $ strOption (long "dynlib-target-dir" & metavar "PATH")) <*>
-      (nullOption (long "package-id" & metavar "ID" & reader simpleParse)) <*>
+      (strOption (long "build-dir" <> metavar "PATH")) <*>
+      (strOption (long "target-dir" <> metavar "PATH")) <*>
+      (optional $ strOption (long "dynlib-target-dir" <> metavar "PATH")) <*>
+      (nullOption (long "package-id" <> metavar "ID" <> reader parsePackageId)) <*>
       (arguments simpleParse (metavar "MODULE"))
+    where
+      parsePackageId str =
+        maybe
+          (Left . ErrorMsg $ "could not parse package-id: " ++ str)
+          Right
+          (simpleParse str)
 
   pkgRegister =
     command "register" $ flip info idm $
@@ -107,9 +113,9 @@ main t =
   compiler =
     (\srcDirs buildDir exts cppOpts dbStack pkgids mods ->
         Compiler.compile t buildDir exts cppOpts dbStack pkgids =<< findModules srcDirs mods) <$>
-      (many $ strOption (short 'i' & metavar "PATH")) <*>
-      (strOption (long "build-dir" & metavar "PATH") <|> pure ".") <*>
-      (many $ parseExtension <$> strOption (short 'X' & metavar "extension")) <*>
+      (many $ strOption (short 'i' <> metavar "PATH")) <*>
+      (strOption (long "build-dir" <> metavar "PATH") <|> pure ".") <*>
+      (many $ parseExtension <$> strOption (short 'X' <> metavar "extension")) <*>
       cppOptsParser <*>
       pkgDbStackParser <*>
       (many $ InstalledPackageId <$> strOption (long "package-id")) <*>
@@ -143,7 +149,7 @@ pkgDbParser :: Parser PackageDB
 pkgDbParser =
   flag' GlobalPackageDB (long "global") <|>
   flag' UserPackageDB   (long "user")   <|>
-  (SpecificPackageDB <$> strOption (long "package-db" & metavar "PATH"))
+  (SpecificPackageDB <$> strOption (long "package-db" <> metavar "PATH"))
 
 pkgDbStackParser :: Parser PackageDBStack
 pkgDbStackParser =
