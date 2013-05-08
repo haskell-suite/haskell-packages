@@ -35,7 +35,7 @@ main
   :: forall c . Compiler.Is c
   => c -> IO ()
 main t =
-  join $ execParser $ info (helper <*> optParser) idm
+  join $ customExecParser (prefs noBacktrack) $ info (helper <*> optParser) idm
   where
 
   optParser =
