@@ -34,7 +34,7 @@ library
     , filepath
     , containers
     , mtl
-    , hse-cpp
+    , cpphs
     , EitherT
     , haskell-src-exts >= 1.14
     , tagged

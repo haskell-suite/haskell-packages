@@ -30,8 +30,8 @@ import Control.Monad
 import Control.Exception
 import Data.Maybe
 import Data.List
-import Language.Haskell.Exts.Annotated.CPP
 import Language.Haskell.Exts.Extension
+import Language.Preprocessor.Cpphs
 
 -- | Compilation function
 type CompileFn = FilePath -> [Extension] -> CpphsOptions -> PackageDBStack -> [InstalledPackageId] -> [FilePath] -> IO ()

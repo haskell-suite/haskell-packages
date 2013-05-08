@@ -25,8 +25,8 @@ import Control.Exception
 import Text.Printf
 import qualified Distribution.HaskellSuite.Compiler as Compiler
 import Distribution.HaskellSuite.Packages
-import Language.Haskell.Exts.Annotated.CPP
 import Language.Haskell.Exts.Extension
+import Language.Preprocessor.Cpphs
 import Paths_haskell_packages as Our (version)
 import System.FilePath
 import System.Directory
