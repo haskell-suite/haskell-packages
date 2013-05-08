@@ -2,13 +2,24 @@
              FlexibleInstances, TypeSynonymInstances,
              DeriveDataTypeable #-}
 module Distribution.HaskellSuite.Helpers
-  ( readPackagesInfo
-  -- * Module monads
-  , ModuleT
-  , runModuleT
-  , evalModuleT
-  , MonadModule(..)
+  (
+  -- * Module monad
+  -- | When you need to resolve modules, you work in a 'ModuleT' monad (or
+  -- another monad that is an instance of 'MonadModule') and use the
+  -- 'getModuleInfo' function.
+  --
+  -- It finds an installed module by its name and reads (and caches) its
+  -- info from the info file. Then you run a 'ModuleT' monadic action
+  -- using 'evalModuleT' or 'runModuleT'.
+    ModuleT
   , getModuleInfo
+  , evalModuleT
+  , runModuleT
+  , MonadModule(..)
+  -- * Getting packages
+  , readPackagesInfo
+  , PkgInfoError(..)
+  -- * Module names
   , ModName(..)
   , convertModuleName
   -- * Useful re-exports
@@ -41,6 +52,10 @@ instance Show PkgInfoError where
   show (PkgInfoNotFound pkgid) =
     printf "%s: package not found: %s" errPrefix (display pkgid)
 
+-- | Try to retrieve an 'InstalledPackageInfo' for each of
+-- 'InstalledPackageId's from a specified set of 'PackageDB's.
+--
+-- May throw a 'PkgInfoNotFound' exception.
 readPackagesInfo
   :: IsPackageDB db
   => MaybeInitDB -> Proxy db -> [PackageDB] -> [InstalledPackageId] -> IO Packages
@@ -61,6 +76,15 @@ readPackagesInfo initDb proxyDb dbs pkgIds = do
 
 -- MonadModule class
 
+-- | This class defines the interface that is used by 'getModuleInfo', so
+-- that you can use it in monads other than 'ModuleT'.
+--
+-- You don't typically have to define your own instances of this class, but
+-- here are a couple of cases when you might:
+--
+-- * A pure (non-'MonadIO') mockup module monad for testing purposes
+--
+-- * A transformer over 'ModuleT'
 class Monad m => MonadModule m where
   type ModuleInfo m
   lookupInCache :: ModName n => n -> m (Maybe (ModuleInfo m))
@@ -82,6 +106,12 @@ instance ModName ModuleName where
 convertModuleName :: (ModName n) => n -> ModuleName
 convertModuleName = fromString . modToString
 
+-- | Tries to find the module in the current set of packages, then find the
+-- module's info file, and reads and caches its contents.
+--
+-- Returns 'Nothing' if the module could not be found in the current set of
+-- packages. If the module is found, but something else goes wrong (e.g.
+-- there's no info file for it), an exception is thrown.
 getModuleInfo :: (MonadModule m, ModName n) => n -> m (Maybe (ModuleInfo m))
 getModuleInfo name = do
   cached <- lookupInCache name
@@ -99,8 +129,9 @@ getModuleInfo name = do
 findModule'sPackage :: ModName n => Packages -> n -> Maybe InstalledPackageInfo
 findModule'sPackage pkgs m = find ((convertModuleName m `elem`) . exposedModules) pkgs
 
--- ModuleT monad transformer
-
+-- | A standard module monad transformer.
+--
+-- @i@ is the type of module info, @m@ is the underlying monad.
 newtype ModuleT i m a =
   ModuleT
     (StateT (Map.Map ModuleName i)
