@@ -18,7 +18,7 @@ module Distribution.HaskellSuite.Compiler
   where
 
 import Data.Version
-import Distribution.HaskellSuite.PackageDB
+import Distribution.HaskellSuite.Packages
 import {-# SOURCE #-} Distribution.HaskellSuite.Cabal
 import Distribution.Simple.Compiler
 import Distribution.Simple.Utils

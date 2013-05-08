@@ -1,6 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable,
              TemplateHaskell, ScopedTypeVariables #-}
-module Distribution.HaskellSuite.PackageDB
+module Distribution.HaskellSuite.Packages
   ( Packages
   , IsPackageDB(..)
   , IsDBName(..)

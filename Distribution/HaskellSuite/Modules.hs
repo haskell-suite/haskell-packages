@@ -23,7 +23,7 @@ module Distribution.HaskellSuite.Modules
   , findModuleFile
   ) where
 
-import Distribution.HaskellSuite.PackageDB
+import Distribution.HaskellSuite.Packages
 import Distribution.Simple.Compiler
 import Distribution.Simple.Utils
 import Distribution.InstalledPackageInfo

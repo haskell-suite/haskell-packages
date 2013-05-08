@@ -18,7 +18,7 @@ library
   default-language:    Haskell2010
   exposed-modules:
     Distribution.HaskellSuite.Compiler
-    Distribution.HaskellSuite.PackageDB
+    Distribution.HaskellSuite.Packages
     Distribution.HaskellSuite.Modules
   other-modules:
     Distribution.HaskellSuite.Cabal
