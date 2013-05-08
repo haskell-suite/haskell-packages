@@ -11,6 +11,12 @@ module Distribution.HaskellSuite.Modules
   -- It finds an installed module by its name and reads (and caches) its
   -- info from the info file. Then you run a 'ModuleT' monadic action
   -- using 'evalModuleT' or 'runModuleT'.
+  --
+  -- To run a 'ModuleT' action you'll also need to provide the set of
+  -- packages (represented by their 'InstalledPackageInfo') in which to
+  -- search for modules. You can get such a set from either
+  -- 'getInstalledPackages' or 'readPackagesInfo', depending on your use
+  -- case.
     ModuleT
   , getModuleInfo
   , evalModuleT
@@ -51,11 +57,17 @@ import System.FilePath
 -- * A pure (non-'MonadIO') mockup module monad for testing purposes
 --
 -- * A transformer over 'ModuleT'
+--
+-- * You need a more complex way to retrieve the module info
 class Monad m => MonadModule m where
+  -- | The type of module info
   type ModuleInfo m
   lookupInCache :: ModName n => n -> m (Maybe (ModuleInfo m))
   insertInCache :: ModName n => n -> ModuleInfo m -> m ()
   getPackages :: m Packages
+
+  -- | Read the module info, given a list of search paths and the module
+  -- name
   readModuleInfo :: ModName n => [FilePath] -> n -> m (ModuleInfo m)
 
 -- | Different libraries (Cabal, haskell-src-exts, ...) use different types
