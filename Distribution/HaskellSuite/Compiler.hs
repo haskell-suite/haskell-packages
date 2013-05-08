@@ -43,7 +43,7 @@ class IsPackageDB (DB compiler) => Is compiler where
 
   name :: compiler -> String
   version :: compiler -> Version
-  extensions :: compiler -> [String] -- ^ extensions of produced files
+  fileExtensions :: compiler -> [String] -- ^ extensions of produced files
   compile :: compiler -> CompileFn
   languageExtensions :: compiler -> [Extension]
 
@@ -56,7 +56,7 @@ class IsPackageDB (DB compiler) => Is compiler where
       -> [ModuleName]
       -> IO ()
   installLib t buildDir targetDir _dynlibTargetDir _pkg mods =
-    findModuleFiles [buildDir] (extensions t) mods
+    findModuleFiles [buildDir] (fileExtensions t) mods
       >>= installOrdinaryFiles normal targetDir
 
   register
@@ -101,6 +101,6 @@ instance IsPackageDB db => Is (Simple db) where
 
   name = stName
   version = stVer
-  extensions = stExts
+  fileExtensions = stExts
   compile = stCompile
   languageExtensions = stLangExts
