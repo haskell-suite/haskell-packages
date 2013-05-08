@@ -1,7 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, TypeFamilies,
              FlexibleInstances, TypeSynonymInstances,
              DeriveDataTypeable #-}
-module Distribution.HaskellSuite.Helpers
+module Distribution.HaskellSuite.Modules
   (
   -- * Module monad
   -- | When you need to resolve modules, you work in a 'ModuleT' monad (or

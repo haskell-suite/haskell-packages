@@ -19,7 +19,7 @@ library
   exposed-modules:
     Distribution.HaskellSuite.Compiler
     Distribution.HaskellSuite.PackageDB
-    Distribution.HaskellSuite.Helpers
+    Distribution.HaskellSuite.Modules
   other-modules:
     Distribution.HaskellSuite.Cabal
     Paths_haskell_packages
