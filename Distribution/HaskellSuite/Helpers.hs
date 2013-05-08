@@ -32,6 +32,7 @@ import Data.Typeable
 import Data.Proxy
 import qualified Data.Map as Map
 import Text.Printf
+import System.FilePath
 
 data PkgInfoError = PkgInfoNotFound InstalledPackageId
   deriving Typeable
@@ -121,21 +122,33 @@ instance (Functor m, Monad m) => MonadModule (ModuleT i m) where
   readModuleInfo dirs mod =
     lift =<< ModuleT (asks snd) <*> pure dirs <*> pure (convertModuleName mod)
 
+-- | Run a 'ModuleT' action
 runModuleT
-  :: ModuleT i m a
-  -> Packages
-  -> ([FilePath] -> ModuleName -> m i)
-  -> Map.Map ModuleName i
+  :: MonadIO m
+  => ModuleT i m a -- ^ the monadic action to run
+  -> Packages -- ^ packages in which to look for modules
+  -> String -- ^ file extension of info files
+  -> (FilePath -> m i) -- ^ how to read information from an info file
+  -> Map.Map ModuleName i -- ^ initial set of module infos
   -> m (a, Map.Map ModuleName i)
-runModuleT (ModuleT a) pkgs readInfo modMap =
-  runReaderT (runStateT a modMap) (pkgs, readInfo)
+  -- ^ return value, plus all cached module infos (that is, the initial set
+  -- plus all infos that have been read by the action itself)
+runModuleT (ModuleT a) pkgs suffix readInfo modMap =
+  runReaderT (runStateT a modMap) (pkgs, findAndReadInfo)
+  where
+    findAndReadInfo dirs name = do
+      (base, rel) <- liftIO $ findModuleFile dirs [suffix] name
+      readInfo $ base </> rel
 
+-- | Run a 'ModuleT' action.
+--
+-- This is a simplified version of 'runModuleT'.
 evalModuleT
-  :: Functor m
-  => ModuleT i m a
-  -> Packages
-  -> ([FilePath] -> ModuleName -> m i)
-  -> Map.Map ModuleName i
+  :: MonadIO m
+  => ModuleT i m a -- ^ the monadic action to run
+  -> Packages -- ^ packages in which to look for modules
+  -> String -- ^ file extension of info files
+  -> (FilePath -> m i) -- ^ how to read information from an info file
   -> m a
-evalModuleT a pkgs readInfo modMap =
-  fst <$> runModuleT a pkgs readInfo modMap
+evalModuleT a pkgs suffix readInfo =
+  fst `liftM` runModuleT a pkgs suffix readInfo Map.empty
