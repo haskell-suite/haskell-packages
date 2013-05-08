@@ -37,9 +37,3 @@ library
     , EitherT
     , haskell-src-exts >= 1.14
     , tagged
-
-executable test
-  default-language:    Haskell2010
-  build-depends:       base, Cabal, haskell-packages, hse-cpp
-  hs-source-dirs: test
-  main-is: test.hs
