@@ -31,7 +31,6 @@ import Data.List
 import Data.Typeable
 import Data.Proxy
 import qualified Data.Map as Map
-import qualified Distribution.HaskellSuite.Compiler as Compiler
 import Text.Printf
 
 data PkgInfoError = PkgInfoNotFound InstalledPackageId

@@ -11,7 +11,6 @@ import Data.List
 import Data.Monoid
 import Data.Proxy
 import Distribution.Simple.Compiler
-import Distribution.Verbosity
 import Distribution.InstalledPackageInfo
   ( showInstalledPackageInfo
   , parseInstalledPackageInfo )

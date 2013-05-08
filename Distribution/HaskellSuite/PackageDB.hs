@@ -21,11 +21,7 @@ import qualified Data.ByteString      as BS
 import qualified Data.ByteString.Lazy as LBS
 import Control.Exception as E
 import Control.Monad
-import Control.DeepSeq
 import Data.Typeable
-import Data.Monoid
-import Data.Maybe
-import Data.List
 import Data.Tagged
 import Data.Proxy
 import Text.Printf
