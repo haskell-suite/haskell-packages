@@ -25,8 +25,6 @@ module Distribution.HaskellSuite.Modules
   -- * Module names
   , ModName(..)
   , convertModuleName
-  -- * Useful re-exports
-  , findModuleFile
   ) where
 
 import Distribution.HaskellSuite.Packages
