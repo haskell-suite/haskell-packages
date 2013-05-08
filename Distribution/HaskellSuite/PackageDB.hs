@@ -6,10 +6,12 @@ module Distribution.HaskellSuite.PackageDB
   , IsDBName(..)
   , StandardDB(..)
   , getInstalledPackages
+  , readPackagesInfo
   , writeDB
   , readDB
   , MaybeInitDB(..)
   , PkgDBError(..)
+  , PkgInfoError(..)
   , errPrefix
   )
   where
@@ -24,6 +26,7 @@ import Control.Monad
 import Data.Typeable
 import Data.Tagged
 import Data.Proxy
+import qualified Data.Map as Map
 import Text.Printf
 import Distribution.InstalledPackageInfo
 import Distribution.Package
@@ -156,3 +159,31 @@ getInstalledPackages initDb _proxy dbspec = do
     (return [])
     (readPackageDB initDb)
     (mbDb :: Maybe db)
+
+-- | Try to retrieve an 'InstalledPackageInfo' for each of
+-- 'InstalledPackageId's from a specified set of 'PackageDB's.
+--
+-- May throw a 'PkgInfoNotFound' exception.
+readPackagesInfo
+  :: IsPackageDB db
+  => MaybeInitDB -> Proxy db -> [PackageDB] -> [InstalledPackageId] -> IO Packages
+readPackagesInfo initDb proxyDb dbs pkgIds = do
+  allPkgInfos <- concat <$> mapM (getInstalledPackages initDb proxyDb) dbs
+  let
+    pkgMap =
+      Map.fromList
+        [ (installedPackageId pkgInfo, pkgInfo)
+        | pkgInfo <- allPkgInfos
+        ]
+  forM pkgIds $ \pkgId ->
+    maybe
+      (throwIO $ PkgInfoNotFound pkgId)
+      return
+      (Map.lookup pkgId pkgMap)
+
+data PkgInfoError = PkgInfoNotFound InstalledPackageId
+  deriving Typeable
+instance Exception PkgInfoError
+instance Show PkgInfoError where
+  show (PkgInfoNotFound pkgid) =
+    printf "%s: package not found: %s" errPrefix (display pkgid)

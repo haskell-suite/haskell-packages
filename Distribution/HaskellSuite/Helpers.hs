@@ -16,9 +16,6 @@ module Distribution.HaskellSuite.Helpers
   , evalModuleT
   , runModuleT
   , MonadModule(..)
-  -- * Getting packages
-  , readPackagesInfo
-  , PkgInfoError(..)
   -- * Module names
   , ModName(..)
   , convertModuleName
@@ -44,37 +41,6 @@ import Data.Proxy
 import qualified Data.Map as Map
 import Text.Printf
 import System.FilePath
-
-data PkgInfoError = PkgInfoNotFound InstalledPackageId
-  deriving Typeable
-instance Exception PkgInfoError
-instance Show PkgInfoError where
-  show (PkgInfoNotFound pkgid) =
-    printf "%s: package not found: %s" errPrefix (display pkgid)
-
--- | Try to retrieve an 'InstalledPackageInfo' for each of
--- 'InstalledPackageId's from a specified set of 'PackageDB's.
---
--- May throw a 'PkgInfoNotFound' exception.
-readPackagesInfo
-  :: IsPackageDB db
-  => MaybeInitDB -> Proxy db -> [PackageDB] -> [InstalledPackageId] -> IO Packages
-readPackagesInfo initDb proxyDb dbs pkgIds = do
-  allPkgInfos <- concat <$> mapM (getInstalledPackages initDb proxyDb) dbs
-  let
-    pkgMap =
-      Map.fromList
-        [ (installedPackageId pkgInfo, pkgInfo)
-        | pkgInfo <- allPkgInfos
-        ]
-  forM pkgIds $ \pkgId ->
-    maybe
-      (throwIO $ PkgInfoNotFound pkgId)
-      return
-      (Map.lookup pkgId pkgMap)
-  -- return $ filter ((`Set.member` idSet) . installedPackageId) allPkgInfos
-
--- MonadModule class
 
 -- | This class defines the interface that is used by 'getModuleInfo', so
 -- that you can use it in monads other than 'ModuleT'.
