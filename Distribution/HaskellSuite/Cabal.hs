@@ -24,7 +24,7 @@ import Control.Monad
 import Control.Monad.Trans.Either
 import Control.Exception
 import Text.Printf
-import Distribution.HaskellSuite.Tool
+import qualified Distribution.HaskellSuite.Compiler as Compiler
 import Distribution.HaskellSuite.PackageDB
 import Language.Haskell.Exts.Annotated.CPP
 import Language.Haskell.Exts.Extension
@@ -33,7 +33,7 @@ import System.FilePath
 import System.Directory
 
 defaultMain
-  :: forall c . IsCompiler c
+  :: forall c . Compiler.Is c
   => c -> IO ()
 defaultMain t =
   join $ execParser $ info (helper <*> optParser) idm
@@ -48,7 +48,7 @@ defaultMain t =
       , subparser pkgCommand
       , compiler]
 
-  versionStr = showVersion $ toolVersion t
+  versionStr = showVersion $ Compiler.version t
   ourVersionStr = showVersion Our.version
 
   numericVersion =
@@ -63,12 +63,12 @@ defaultMain t =
 
   supportedExtensions =
     flag'
-      (mapM_ (putStrLn . prettyExtension) $ toolLanguageExtensions t)
+      (mapM_ (putStrLn . prettyExtension) $ Compiler.languageExtensions t)
       (long "supported-extensions")
 
   version =
     flag'
-      (printf "%s %s\nBased on haskell-packages version %s\n" (toolName t) versionStr ourVersionStr)
+      (printf "%s %s\nBased on haskell-packages version %s\n" (Compiler.name t) versionStr ourVersionStr)
       (long "version")
 
   pkgCommand =
@@ -83,12 +83,12 @@ defaultMain t =
           forM dbs $ \db ->
             getInstalledPackages
               InitDB
-              (Proxy :: Proxy (CompilerDB c))
+              (Proxy :: Proxy (Compiler.DB c))
               db
         putStr $ intercalate "---\n" $ map showInstalledPackageInfo pkgs
 
   pkgInstallLib = command "install-library" $ flip info idm $
-    toolInstallLib t <$>
+    Compiler.installLib t <$>
       (strOption (long "build-dir" & metavar "PATH")) <*>
       (strOption (long "target-dir" & metavar "PATH")) <*>
       (optional $ strOption (long "dynlib-target-dir" & metavar "PATH")) <*>
@@ -102,12 +102,12 @@ defaultMain t =
   doRegister d = do
     pi <- parseInstalledPackageInfo <$> getContents
     case pi of
-      ParseOk _ a -> toolRegister t d a
+      ParseOk _ a -> Compiler.register t d a
       ParseFailed e -> putStrLn $ snd $ locatedErrorMsg e
 
   compiler =
     (\srcDirs buildDir exts cppOpts dbStack pkgids mods ->
-        toolCompile t buildDir exts cppOpts dbStack pkgids =<< findModules srcDirs mods) <$>
+        Compiler.compile t buildDir exts cppOpts dbStack pkgids =<< findModules srcDirs mods) <$>
       (many $ strOption (short 'i' & metavar "PATH")) <*>
       (strOption (long "build-dir" & metavar "PATH") <|> pure ".") <*>
       (many $ parseExtension <$> strOption (short 'X' & metavar "extension")) <*>

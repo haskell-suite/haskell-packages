@@ -1,13 +1,16 @@
 {-# LANGUAGE TypeFamilies, FlexibleContexts, ScopedTypeVariables #-}
-module Distribution.HaskellSuite.Tool
+-- | This module is designed to be imported qualified:
+--
+-- >import qualified Distribution.HaskellSuite.Compiler as Compiler
+module Distribution.HaskellSuite.Compiler
   (
-    -- * Tool description
+    -- * Compiler description
     CompileFn
-  , IsCompiler(..)
+  , Is(..)
 
     -- * Simple compiler
-  , SimpleCompiler
-  , simpleCompiler
+  , Simple
+  , simple
   )
   where
 
@@ -20,7 +23,7 @@ import Distribution.InstalledPackageInfo
 import Distribution.ParseUtils
 import Distribution.Package
 import Distribution.Text
-import Distribution.ModuleName
+import Distribution.ModuleName (ModuleName)
 import System.FilePath
 import System.Directory
 import Control.Applicative
@@ -34,19 +37,17 @@ import Language.Haskell.Exts.Extension
 -- | Compilation function
 type CompileFn = FilePath -> [Extension] -> CpphsOptions -> PackageDBStack -> [InstalledPackageId] -> [FilePath] -> IO ()
 
-class
-  IsPackageDB (CompilerDB compiler) =>
-  IsCompiler compiler where
+class IsPackageDB (DB compiler) => Is compiler where
 
-  type CompilerDB compiler
+  type DB compiler
 
-  toolName :: compiler -> String
-  toolVersion :: compiler -> Version
-  toolExtensions :: compiler -> [String] -- ^ extensions of produced files
-  toolCompile :: compiler -> CompileFn
-  toolLanguageExtensions :: compiler -> [Extension]
+  name :: compiler -> String
+  version :: compiler -> Version
+  extensions :: compiler -> [String] -- ^ extensions of produced files
+  compile :: compiler -> CompileFn
+  languageExtensions :: compiler -> [Extension]
 
-  toolInstallLib
+  installLib
       :: compiler
       -> FilePath -- ^ build dir
       -> FilePath -- ^ target dir
@@ -54,19 +55,19 @@ class
       -> PackageIdentifier
       -> [ModuleName]
       -> IO ()
-  toolInstallLib t buildDir targetDir _dynlibTargetDir _pkg mods =
-    findModuleFiles [buildDir] (toolExtensions t) mods
+  installLib t buildDir targetDir _dynlibTargetDir _pkg mods =
+    findModuleFiles [buildDir] (extensions t) mods
       >>= installOrdinaryFiles normal targetDir
 
-  toolRegister
+  register
     :: compiler
     -> PackageDB
     -> InstalledPackageInfo
     -> IO ()
-  toolRegister t dbspec pkg = do
+  register t dbspec pkg = do
     mbDb <- locateDB dbspec
 
-    case mbDb :: Maybe (CompilerDB compiler) of
+    case mbDb :: Maybe (DB compiler) of
       Nothing -> throwIO RegisterNullDB
       Just db -> do
         pkgs <- readPackageDB InitDB db
@@ -78,7 +79,7 @@ class
 findPackage :: InstalledPackageId -> Packages -> Maybe InstalledPackageInfo
 findPackage pkgid = find ((pkgid ==) . installedPackageId)
 
-data SimpleCompiler db = SimpleCompiler
+data Simple db = Simple
   { stName :: String
   , stVer :: Version
   , stLangExts :: [Extension]
@@ -86,20 +87,20 @@ data SimpleCompiler db = SimpleCompiler
   , stExts :: [String]
   }
 
-simpleCompiler
-  :: String -- ^ tool name
-  -> Version -- ^ tool version
+simple
+  :: String -- ^ compiler name
+  -> Version -- ^ compiler version
   -> [Extension]
   -> CompileFn
   -> [String] -- ^ extensions that generated file have
-  -> SimpleCompiler db
-simpleCompiler = SimpleCompiler
+  -> Simple db
+simple = Simple
 
-instance IsPackageDB db => IsCompiler (SimpleCompiler db) where
-  type CompilerDB (SimpleCompiler db) = db
+instance IsPackageDB db => Is (Simple db) where
+  type DB (Simple db) = db
 
-  toolName = stName
-  toolVersion = stVer
-  toolExtensions = stExts
-  toolCompile = stCompile
-  toolLanguageExtensions = stLangExts
+  name = stName
+  version = stVer
+  extensions = stExts
+  compile = stCompile
+  languageExtensions = stLangExts
