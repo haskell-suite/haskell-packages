@@ -76,6 +76,7 @@ deriveJSON id ''InstalledPackageInfo_
 
 type Packages = [InstalledPackageInfo]
 
+-- | Get all packages that are registered in a particular database
 getInstalledPackages
   :: forall db. IsPackageDB db
   => MaybeInitDB
