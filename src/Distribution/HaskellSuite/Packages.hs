@@ -1,15 +1,37 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable,
              TemplateHaskell, ScopedTypeVariables #-}
 module Distribution.HaskellSuite.Packages
-  ( Packages
-  , IsPackageDB(..)
-  , IsDBName(..)
-  , StandardDB(..)
-  , getInstalledPackages
+  (
+  -- * Querying package databases
+  -- | 'getInstalledPackages' and 'readPackagesInfo' can be used to get
+  -- package information from package databases.
+  --
+  -- They use the 'IsPackageDB' interface, so that you can use them with
+  -- your own, custom databases.
+  --
+  -- Use 'getInstalledPackages' to get all packages defined in a particular
+  -- database, and 'readPackagesInfo' when you're searching for
+  -- a particular set of packages in a set of databases.
+    getInstalledPackages
   , readPackagesInfo
+  -- * IsPackageDB class and friends
+  , IsPackageDB(..)
+  , MaybeInitDB(..)
+  , Packages
+  -- * StandardDB
+  -- | 'StandardDB' is a simple `IsPackageDB` implementation which cover many
+  -- (but not all) use cases. Please see the source code to see what
+  -- assumptions it makes and whether they hold for your use case.
+  , StandardDB(..)
+  , IsDBName(..)
+
+  -- * Auxiliary functions
+  -- | 'writeDB' and 'readDB' perform (de)serialization of a package
+  -- database using a simple JSON encoding. You may use these to implement
+  -- 'writePackageDB' and 'readPackageDB' for your own databases.
   , writeDB
   , readDB
-  , MaybeInitDB(..)
+  -- * Exceptions
   , PkgDBError(..)
   , PkgInfoError(..)
   , errPrefix
@@ -93,6 +115,13 @@ readDB maybeInit path = do
 
       | otherwise = return ()
 
+-- | Package database class.
+--
+-- @db@ will typically be a newtype-wrapped path to the database file,
+-- although more sophisticated setups are certainly possible.
+  --
+  -- Consider using 'StandardDB' first, and implement your own database
+  -- type if that isn't enough.
 class IsPackageDB db where
 
   -- | The name of the database. Used to construct some paths.
