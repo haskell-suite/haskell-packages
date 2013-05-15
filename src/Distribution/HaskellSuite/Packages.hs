@@ -12,12 +12,12 @@ module Distribution.HaskellSuite.Packages
   -- Use 'getInstalledPackages' to get all packages defined in a particular
   -- database, and 'readPackagesInfo' when you're searching for
   -- a particular set of packages in a set of databases.
-    getInstalledPackages
+    Packages
+  , getInstalledPackages
   , readPackagesInfo
   -- * IsPackageDB class and friends
   , IsPackageDB(..)
   , MaybeInitDB(..)
-  , Packages
   -- * StandardDB
   -- | 'StandardDB' is a simple `IsPackageDB` implementation which cover many
   -- (but not all) use cases. Please see the source code to see what
@@ -70,50 +70,50 @@ deriveJSON id ''PackageIdentifier
 deriveJSON id ''InstalledPackageId
 deriveJSON id ''InstalledPackageInfo_
 
+--------------
+-- Querying --
+--------------
+
 type Packages = [InstalledPackageInfo]
 
-data PkgDBError
-  = BadPkgDB FilePath
-  | PkgDBReadError FilePath IOException
-  | PkgExists InstalledPackageId
-  | RegisterNullDB
-  deriving (Typeable)
-errPrefix = "haskell-suite package manager"
-instance Show PkgDBError where
-  show (BadPkgDB path) =
-    printf "%s: bad package database at %s" errPrefix path
-  show (PkgDBReadError path e) =
-    printf "%s: package db at %s could not be read: %s"
-      errPrefix path (show e)
-  show (PkgExists pkgid) =
-    printf "%s: package %s is already in the database" errPrefix (display pkgid)
-  show (RegisterNullDB) =
-    printf "%s: attempt to register in a null global db" errPrefix
-instance Exception PkgDBError
+getInstalledPackages
+  :: forall db. IsPackageDB db
+  => MaybeInitDB
+  -> Proxy db
+  -> PackageDB
+  -> IO Packages
+getInstalledPackages initDb _proxy dbspec = do
+  mbDb <- locateDB dbspec
 
-data MaybeInitDB = InitDB | Don'tInitDB
+  maybe
+    (return [])
+    (readPackageDB initDb)
+    (mbDb :: Maybe db)
 
-writeDB :: FilePath -> Packages -> IO ()
-writeDB path db = LBS.writeFile path $ encode db
+-- | Try to retrieve an 'InstalledPackageInfo' for each of
+-- 'InstalledPackageId's from a specified set of 'PackageDB's.
+--
+-- May throw a 'PkgInfoNotFound' exception.
+readPackagesInfo
+  :: IsPackageDB db
+  => MaybeInitDB -> Proxy db -> [PackageDB] -> [InstalledPackageId] -> IO Packages
+readPackagesInfo initDb proxyDb dbs pkgIds = do
+  allPkgInfos <- concat <$> mapM (getInstalledPackages initDb proxyDb) dbs
+  let
+    pkgMap =
+      Map.fromList
+        [ (installedPackageId pkgInfo, pkgInfo)
+        | pkgInfo <- allPkgInfos
+        ]
+  forM pkgIds $ \pkgId ->
+    maybe
+      (throwIO $ PkgInfoNotFound pkgId)
+      return
+      (Map.lookup pkgId pkgMap)
 
-readDB :: MaybeInitDB -> FilePath -> IO Packages
-readDB maybeInit path = do
-  maybeDoInitDB
-
-  cts <- LBS.fromChunks . return <$> BS.readFile path
-    `E.catch` \e ->
-      throwIO $ PkgDBReadError path e
-  maybe (throwIO $ BadPkgDB path) return $ decode' cts
-
-  where
-    maybeDoInitDB
-      | InitDB <- maybeInit = do
-          dbExists <- doesFileExist path
-
-          unless dbExists $ do
-            writeDB path []
-
-      | otherwise = return ()
+---------------------------
+-- IsPackageDB & friends --
+---------------------------
 
 -- | Package database class.
 --
@@ -159,8 +159,11 @@ class IsPackageDB db where
     path <- (</>) <$> haskellPackagesDir <*> pure (name <.> "db")
     dbFromPath path
 
-haskellPackagesDir :: IO FilePath
-haskellPackagesDir = getAppUserDataDirectory "haskell-packages"
+data MaybeInitDB = InitDB | Don'tInitDB
+
+----------------
+-- StandardDB --
+----------------
 
 class IsDBName name where
   getDBName :: Tagged name String
@@ -175,40 +178,58 @@ instance IsDBName name => IsPackageDB (StandardDB name) where
   globalDB = return Nothing
   dbFromPath path = return $ StandardDB path
 
-getInstalledPackages
-  :: forall db. IsPackageDB db
-  => MaybeInitDB
-  -> Proxy db
-  -> PackageDB
-  -> IO Packages
-getInstalledPackages initDb _proxy dbspec = do
-  mbDb <- locateDB dbspec
+-------------------------
+-- Auxiliary functions --
+-------------------------
 
-  maybe
-    (return [])
-    (readPackageDB initDb)
-    (mbDb :: Maybe db)
+writeDB :: FilePath -> Packages -> IO ()
+writeDB path db = LBS.writeFile path $ encode db
 
--- | Try to retrieve an 'InstalledPackageInfo' for each of
--- 'InstalledPackageId's from a specified set of 'PackageDB's.
---
--- May throw a 'PkgInfoNotFound' exception.
-readPackagesInfo
-  :: IsPackageDB db
-  => MaybeInitDB -> Proxy db -> [PackageDB] -> [InstalledPackageId] -> IO Packages
-readPackagesInfo initDb proxyDb dbs pkgIds = do
-  allPkgInfos <- concat <$> mapM (getInstalledPackages initDb proxyDb) dbs
-  let
-    pkgMap =
-      Map.fromList
-        [ (installedPackageId pkgInfo, pkgInfo)
-        | pkgInfo <- allPkgInfos
-        ]
-  forM pkgIds $ \pkgId ->
-    maybe
-      (throwIO $ PkgInfoNotFound pkgId)
-      return
-      (Map.lookup pkgId pkgMap)
+readDB :: MaybeInitDB -> FilePath -> IO Packages
+readDB maybeInit path = do
+  maybeDoInitDB
+
+  cts <- LBS.fromChunks . return <$> BS.readFile path
+    `E.catch` \e ->
+      throwIO $ PkgDBReadError path e
+  maybe (throwIO $ BadPkgDB path) return $ decode' cts
+
+  where
+    maybeDoInitDB
+      | InitDB <- maybeInit = do
+          dbExists <- doesFileExist path
+
+          unless dbExists $ do
+            writeDB path []
+
+      | otherwise = return ()
+
+haskellPackagesDir :: IO FilePath
+haskellPackagesDir = getAppUserDataDirectory "haskell-packages"
+
+----------------
+-- Exceptions --
+----------------
+
+errPrefix = "haskell-suite package manager"
+
+data PkgDBError
+  = BadPkgDB FilePath
+  | PkgDBReadError FilePath IOException
+  | PkgExists InstalledPackageId
+  | RegisterNullDB
+  deriving (Typeable)
+instance Show PkgDBError where
+  show (BadPkgDB path) =
+    printf "%s: bad package database at %s" errPrefix path
+  show (PkgDBReadError path e) =
+    printf "%s: package db at %s could not be read: %s"
+      errPrefix path (show e)
+  show (PkgExists pkgid) =
+    printf "%s: package %s is already in the database" errPrefix (display pkgid)
+  show (RegisterNullDB) =
+    printf "%s: attempt to register in a null global db" errPrefix
+instance Exception PkgDBError
 
 data PkgInfoError = PkgInfoNotFound InstalledPackageId
   deriving Typeable
