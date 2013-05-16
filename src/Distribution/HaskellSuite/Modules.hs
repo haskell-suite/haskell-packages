@@ -79,6 +79,7 @@ instance ModName String where
 instance ModName ModuleName where
   modToString = display
 
+-- | Convert module name from arbitrary representation to Cabal's one
 convertModuleName :: (ModName n) => n -> ModuleName
 convertModuleName = fromString . modToString
 
