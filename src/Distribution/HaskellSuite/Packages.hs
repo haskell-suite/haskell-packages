@@ -34,7 +34,6 @@ module Distribution.HaskellSuite.Packages
   -- * Exceptions
   , PkgDBError(..)
   , PkgInfoError(..)
-  , errPrefix
   )
   where
 
@@ -160,6 +159,8 @@ class IsPackageDB db where
     path <- (</>) <$> haskellPackagesDir <*> pure (name <.> "db")
     dbFromPath path
 
+-- | A flag which tells whether the library should create an empty package
+-- database if it doesn't exist yet
 data MaybeInitDB = InitDB | Don'tInitDB
 
 ----------------
@@ -212,13 +213,14 @@ haskellPackagesDir = getAppUserDataDirectory "haskell-packages"
 -- Exceptions --
 ----------------
 
+errPrefix :: String
 errPrefix = "haskell-suite package manager"
 
 data PkgDBError
-  = BadPkgDB FilePath
-  | PkgDBReadError FilePath IOException
-  | PkgExists InstalledPackageId
-  | RegisterNullDB
+  = BadPkgDB FilePath -- ^ package database could not be parsed or contains errors
+  | PkgDBReadError FilePath IOException -- ^ package db file could not be read
+  | PkgExists InstalledPackageId -- ^ attempt to register an already present package id
+  | RegisterNullDB -- ^ attempt to register in the global db when it's not present
   deriving (Typeable)
 instance Show PkgDBError where
   show (BadPkgDB path) =
@@ -232,7 +234,9 @@ instance Show PkgDBError where
     printf "%s: attempt to register in a null global db" errPrefix
 instance Exception PkgDBError
 
-data PkgInfoError = PkgInfoNotFound InstalledPackageId
+data PkgInfoError
+  = PkgInfoNotFound InstalledPackageId
+  -- ^ requested package id could not be found in any of the package databases
   deriving Typeable
 instance Exception PkgInfoError
 instance Show PkgInfoError where
