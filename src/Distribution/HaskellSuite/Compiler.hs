@@ -4,15 +4,19 @@
 -- >import qualified Distribution.HaskellSuite.Compiler as Compiler
 module Distribution.HaskellSuite.Compiler
   (
-    -- * Compiler description
+  -- * Compiler description
     Is(..)
   , CompileFn
 
-    -- * Simple compiler
+  -- * Simple compiler
   , Simple
   , simple
 
-    -- * Command line
+  -- * Command line
+  -- | Compiler's entry point.
+  --
+  -- It parses command line options (that are typically passed by Cabal) and
+  -- invokes the appropriate compiler's methods.
   , main
   )
   where
