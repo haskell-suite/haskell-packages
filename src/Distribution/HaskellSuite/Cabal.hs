@@ -26,10 +26,14 @@ import Text.Printf
 import qualified Distribution.HaskellSuite.Compiler as Compiler
 import Distribution.HaskellSuite.Packages
 import Language.Haskell.Exts.Extension
-import Language.Preprocessor.Cpphs
 import Paths_haskell_packages as Our (version)
 import System.FilePath
 import System.Directory
+
+-- It is actually important that we import 'defaultCpphsOptions' from
+-- hse-cpp and not from cpphs, because they are different. hse-cpp version
+-- provides the defaults more compatible with haskell-src-exts.
+import Language.Haskell.Exts.Annotated.CPP
 
 main
   :: forall c . Compiler.Is c
