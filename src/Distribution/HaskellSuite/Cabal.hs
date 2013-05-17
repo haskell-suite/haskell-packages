@@ -44,8 +44,8 @@ main t =
       , numericVersion
       , hspkgVersion
       , supportedExtensions
-      , subparser pkgCommand
-      , compiler]
+      , subparser $ pkgCommand <> compilerCommand
+      ]
 
   versionStr = showVersion $ Compiler.version t
   ourVersionStr = showVersion Our.version
@@ -110,6 +110,8 @@ main t =
       ParseOk _ a -> Compiler.register t d a
       ParseFailed e -> putStrLn $ snd $ locatedErrorMsg e
 
+  compilerCommand =
+    command "compile" (info compiler idm)
   compiler =
     (\srcDirs buildDir exts cppOpts dbStack pkgids mods ->
         Compiler.compile t buildDir exts cppOpts dbStack pkgids =<< findModules srcDirs mods) <$>
