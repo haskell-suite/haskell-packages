@@ -48,3 +48,10 @@ Assuming the compiler uses haskell-packages and exports its database type, it's
 very easy to use its artifacts. See `Distribution.HaskellSuite.Packages` for
 package resolution and `Distribution.HaskellSuite.Modules` for module
 resolution.
+
+## Installation
+
+Note that haskell-packages uses (yet unreleased) haskell-src-exts 1.14. Get it
+[here][hse].
+
+[hse]: https://github.com/haskell-suite/haskell-src-exts
