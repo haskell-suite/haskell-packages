@@ -56,8 +56,8 @@ Note that haskell-packages uses (yet unreleased) haskell-src-exts 1.14. Get it
 
 It doesn't matter what Cabal version you use together with haskell-packages, but
 if you want to invoke a haskell-packages compiler from Cabal (see
-[Usage](#usage)), you need to our [fork of Cabal][Cabal]. Eventually it will be
-merged into Cabal.
+[Usage](#usage)), you need to build our [fork of Cabal][Cabal]. Eventually it
+will be merged into Cabal.
 
 [hse]: https://github.com/haskell-suite/haskell-src-exts
 [Cabal]: https://github.com/feuerbach/Cabal
