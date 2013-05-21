@@ -38,7 +38,15 @@ import Language.Haskell.Exts.Annotated.CPP
 import Language.Haskell.Exts.Extension
 
 -- | Compilation function
-type CompileFn = FilePath -> [Extension] -> CpphsOptions -> PackageDBStack -> [InstalledPackageId] -> [FilePath] -> IO ()
+type CompileFn
+  =  FilePath
+  -> Maybe Language
+  -> [Extension]
+  -> CpphsOptions
+  -> PackageDBStack
+  -> [InstalledPackageId]
+  -> [FilePath]
+  -> IO ()
 
 -- | An abstraction over a Haskell compiler.
 --

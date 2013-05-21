@@ -123,10 +123,11 @@ main t =
   compilerCommand =
     command "compile" (info compiler idm)
   compiler =
-    (\srcDirs buildDir exts cppOpts dbStack pkgids mods ->
-        Compiler.compile t buildDir exts cppOpts dbStack pkgids =<< findModules srcDirs mods) <$>
+    (\srcDirs buildDir lang exts cppOpts dbStack pkgids mods ->
+        Compiler.compile t buildDir lang exts cppOpts dbStack pkgids =<< findModules srcDirs mods) <$>
       (many $ strOption (short 'i' <> metavar "PATH")) <*>
       (strOption (long "build-dir" <> metavar "PATH") <|> pure ".") <*>
+      (optional $ classifyLanguage <$> strOption (short 'G' <> metavar "language")) <*>
       (many $ parseExtension <$> strOption (short 'X' <> metavar "extension")) <*>
       cppOptsParser <*>
       pkgDbStackParser <*>
