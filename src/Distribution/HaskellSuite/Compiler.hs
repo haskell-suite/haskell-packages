@@ -67,7 +67,7 @@ class IsPackageDB (DB compiler) => Is compiler where
   -- | The database type used by the compiler
   type DB compiler
 
-  -- | Compiler's name
+  -- | Compiler's name. Should not contain spaces.
   name :: compiler -> String
   -- | Compiler's version
   version :: compiler -> Version

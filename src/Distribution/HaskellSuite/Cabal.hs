@@ -45,7 +45,7 @@ main t =
   optParser =
     foldr (<|>) empty
       [ version
-      , numericVersion
+      , compilerVersion
       , hspkgVersion
       , supportedLanguages
       , supportedExtensions
@@ -55,10 +55,10 @@ main t =
   versionStr = showVersion $ Compiler.version t
   ourVersionStr = showVersion Our.version
 
-  numericVersion =
+  compilerVersion =
     flag'
-      (putStrLn versionStr)
-      (long "numeric-version")
+      (printf "%s %s" name versionStr)
+      (long "compiler-version")
 
   hspkgVersion =
     flag'
@@ -79,6 +79,8 @@ main t =
     flag'
       (printf "%s %s\nBased on haskell-packages version %s\n" (Compiler.name t) versionStr ourVersionStr)
       (long "version")
+
+  compilerName
 
   pkgCommand =
     command "pkg" (info (subparser pkgSubcommands) idm)
