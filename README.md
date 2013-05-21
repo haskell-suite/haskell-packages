@@ -10,14 +10,14 @@ be able to build ordinary Haskell packages.
 
 If you go the hard way, this involves:
 
-1. Parsing command line parameters. Sounds easy — just take a list of files to
+1. **Parsing command line parameters**. Sounds easy — just take a list of files to
     compile. In reality you also need to handle package ids and package dbs, CPP
     options (`-DFOO=1`), language extension flags (`-XRankNTypes`) etc.
 
     To integrate with Cabal, you also need to tell it the list of installed
     packages, supported languages and extensions etc.
 
-2. Actual integration with Cabal means understanding how Cabal works and
+2. Actual **integration with Cabal** means understanding how Cabal works and
     hard-coding support for your compiler. And then getting it accepted and
     waiting for the next Cabal release.
 
@@ -25,7 +25,7 @@ If you go the hard way, this involves:
     by Cabal. It might work, but often it won't, for various reasons. Also,
     GHC's command line protocol is quite complex.
 
-3. Package management. You need to implement a package db mechanism, which would
+3. **Package management**. You need to implement a package db mechanism, which would
     let you to keep track of installed packages. Then you'd have to implement a
     `ghc-pkg`-like tool to manage those databases, for both Cabal and your users.
 
