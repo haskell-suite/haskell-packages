@@ -83,7 +83,8 @@ class IsPackageDB (DB compiler) => Is compiler where
     findModuleFiles [buildDir] (fileExtensions t) mods
       >>= installOrdinaryFiles normal targetDir
 
-  -- | Register the package in the database
+  -- | Register the package in the database. If a package with the same id
+  -- is already installed, it should be replaced by the new one.
   register
     :: compiler
     -> PackageDB
@@ -97,12 +98,10 @@ class IsPackageDB (DB compiler) => Is compiler where
       Just db -> do
         pkgs <- readPackageDB InitDB db
         let pkgid = installedPackageId pkg
-        when (isJust $ findPackage pkgid pkgs) $
-          throwIO $ PkgExists pkgid
-        writePackageDB db $ pkg:pkgs
+        writePackageDB db $ pkg : removePackage pkgid pkgs
 
-findPackage :: InstalledPackageId -> Packages -> Maybe InstalledPackageInfo
-findPackage pkgid = find ((pkgid ==) . installedPackageId)
+removePackage :: InstalledPackageId -> Packages -> Packages
+removePackage pkgid = filter ((pkgid /=) . installedPackageId)
 
 data Simple db = Simple
   { stName :: String

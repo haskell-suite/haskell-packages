@@ -76,7 +76,7 @@ main t =
 
   pkgCommand =
     command "pkg" (info (subparser pkgSubcommands) idm)
-  pkgSubcommands = mconcat [pkgDump, pkgInstallLib, pkgRegister]
+  pkgSubcommands = mconcat [pkgDump, pkgInstallLib, pkgUpdate]
 
   pkgDump = command "dump" $ info (doDump <$> pkgDbStackParser) idm
     where
@@ -104,8 +104,8 @@ main t =
           Right
           (simpleParse str)
 
-  pkgRegister =
-    command "register" $ flip info idm $
+  pkgUpdate =
+    command "update" $ flip info idm $
       doRegister <$> pkgDbParser
 
   doRegister d = do
