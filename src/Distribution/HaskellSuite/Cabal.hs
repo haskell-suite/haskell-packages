@@ -47,6 +47,7 @@ main t =
       [ version
       , numericVersion
       , hspkgVersion
+      , supportedLanguages
       , supportedExtensions
       , subparser $ pkgCommand <> compilerCommand
       ]
@@ -63,6 +64,11 @@ main t =
     flag'
       (putStrLn ourVersionStr)
       (long "hspkg-version")
+
+  supportedLanguages =
+    flag'
+      (mapM_ (putStrLn . prettyLanguage) $ Compiler.languages t)
+      (long "supported-languages")
 
   supportedExtensions =
     flag'

@@ -49,7 +49,7 @@ type CompileFn = FilePath -> [Extension] -> CpphsOptions -> PackageDBStack -> [I
 -- write even less code.
 --
 -- Minimal definition: 'DB', 'name', 'version', 'fileExtensions',
--- 'compile', 'languageExtensions'.
+-- 'compile', 'languages', 'languageExtensions'.
 --
 -- 'fileExtensions' are only used for 'installLib', so if you define
 -- a custom 'installLib', 'fileExtensions' won't be used (but you'll still
@@ -68,6 +68,9 @@ class IsPackageDB (DB compiler) => Is compiler where
   fileExtensions :: compiler -> [String]
   -- | How to compile a set of modules
   compile :: compiler -> CompileFn
+  -- | Languages supported by this compiler (such as @Haskell98@,
+  -- @Haskell2010@ etc.)
+  languages :: compiler -> [Language]
   -- | Extensions supported by this compiler
   languageExtensions :: compiler -> [Extension]
 
@@ -106,6 +109,7 @@ removePackage pkgid = filter ((pkgid /=) . installedPackageId)
 data Simple db = Simple
   { stName :: String
   , stVer :: Version
+  , stLangs :: [Language]
   , stLangExts :: [Extension]
   , stCompile :: CompileFn
   , stExts :: [String]
@@ -114,6 +118,7 @@ data Simple db = Simple
 simple
   :: String -- ^ compiler name
   -> Version -- ^ compiler version
+  -> [Language]
   -> [Extension]
   -> CompileFn
   -> [String] -- ^ extensions that generated file have
@@ -127,4 +132,5 @@ instance IsPackageDB db => Is (Simple db) where
   version = stVer
   fileExtensions = stExts
   compile = stCompile
+  languages = stLangs
   languageExtensions = stLangExts
