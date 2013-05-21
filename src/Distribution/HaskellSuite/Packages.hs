@@ -1,5 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable,
-             TemplateHaskell, ScopedTypeVariables #-}
+             TemplateHaskell, ScopedTypeVariables, OverloadedStrings #-}
 module Distribution.HaskellSuite.Packages
   (
   -- * Querying package databases
@@ -38,7 +38,7 @@ module Distribution.HaskellSuite.Packages
   where
 
 import Data.Aeson
-import Data.Aeson.TH
+import Data.Aeson.Types
 import Control.Applicative
 import qualified Data.ByteString      as BS
 import qualified Data.ByteString.Lazy as LBS
@@ -49,31 +49,23 @@ import Data.Tagged
 import Data.Proxy
 import qualified Data.Map as Map
 import Text.Printf
-import Distribution.InstalledPackageInfo
+import qualified Distribution.InstalledPackageInfo as Info
 import Distribution.Package
 import Distribution.Text
 import System.FilePath
 import System.Directory
 
--- The following imports are needed only for generation of JSON instances
+-- The following imports are needed only for JSON instances
 import Data.Version (Version(..))
 import Distribution.Simple.Compiler (PackageDB(..))
 import Distribution.License (License(..))
-import Distribution.ModuleName(ModuleName(..))
-
-deriveJSON id ''License
-deriveJSON id ''Version
-deriveJSON id ''ModuleName
-deriveJSON id ''PackageName
-deriveJSON id ''PackageIdentifier
-deriveJSON id ''InstalledPackageId
-deriveJSON id ''InstalledPackageInfo_
+import Distribution.ModuleName(ModuleName)
 
 --------------
 -- Querying --
 --------------
 
-type Packages = [InstalledPackageInfo]
+type Packages = [Info.InstalledPackageInfo]
 
 -- | Get all packages that are registered in a particular database
 getInstalledPackages
@@ -102,7 +94,7 @@ readPackagesInfo initDb proxyDb dbs pkgIds = do
   let
     pkgMap =
       Map.fromList
-        [ (installedPackageId pkgInfo, pkgInfo)
+        [ (Info.installedPackageId pkgInfo, pkgInfo)
         | pkgInfo <- allPkgInfos
         ]
   forM pkgIds $ \pkgId ->
@@ -242,3 +234,114 @@ instance Exception PkgInfoError
 instance Show PkgInfoError where
   show (PkgInfoNotFound pkgid) =
     printf "%s: package not found: %s" errPrefix (display pkgid)
+
+---------------------
+-- Aeson instances --
+---------------------
+
+stdToJSON :: Text a => a -> Value
+stdToJSON = toJSON . display
+stdFromJSON :: Text a => Value -> Parser a
+stdFromJSON = maybe mzero return . simpleParse <=< parseJSON
+
+instance ToJSON License where
+  toJSON = stdToJSON
+instance FromJSON License where
+  parseJSON = stdFromJSON
+
+instance ToJSON Version where
+  toJSON = stdToJSON
+instance FromJSON Version where
+  parseJSON = stdFromJSON
+
+instance ToJSON ModuleName where
+  toJSON = stdToJSON
+instance FromJSON ModuleName where
+  parseJSON = stdFromJSON
+
+instance ToJSON PackageName where
+  toJSON = stdToJSON
+instance FromJSON PackageName where
+  parseJSON = stdFromJSON
+
+instance ToJSON PackageIdentifier where
+  toJSON = stdToJSON
+instance FromJSON PackageIdentifier where
+  parseJSON = stdFromJSON
+
+instance ToJSON InstalledPackageId where
+  toJSON = stdToJSON
+instance FromJSON InstalledPackageId where
+  parseJSON = stdFromJSON
+
+instance ToJSON a => ToJSON (Info.InstalledPackageInfo_ a) where
+  toJSON i = object
+    [ "id" .= Info.installedPackageId i
+    , "name" .= Info.sourcePackageId i
+    , "license" .= Info.license i
+    , "copyright" .= Info.copyright i
+    , "maintainer" .= Info.maintainer i
+    , "author" .= Info.author i
+    , "stability" .= Info.stability i
+    , "homepage" .= Info.homepage i
+    , "package-url" .= Info.pkgUrl i
+    , "synopsis" .= Info.synopsis i
+    , "description" .= Info.description i
+    , "category" .= Info.category i
+    , "exposed" .= Info.exposed i
+    , "exposed-modules" .= Info.exposedModules i
+    , "hidden-modules" .= Info.hiddenModules i
+    , "trusted" .= Info.trusted i
+    , "import-dirs" .= Info.importDirs i
+    , "library-dirs" .= Info.libraryDirs i
+    , "hs-libraries" .= Info.hsLibraries i
+    , "extra-libraries" .= Info.extraLibraries i
+    , "extra-ghci-libraries" .= Info.extraGHCiLibraries i
+    , "include-dirs" .= Info.includeDirs i
+    , "includes" .= Info.includes i
+    , "depends" .= Info.depends i
+    , "hugs-options" .= Info.hugsOptions i
+    , "cc-options" .= Info.ccOptions i
+    , "ld-options" .= Info.ldOptions i
+    , "framework-dirs" .= Info.frameworkDirs i
+    , "frameworks" .= Info.frameworks i
+    , "haddock-interfaces" .= Info.haddockInterfaces i
+    , "haddock-html" .= Info.haddockHTMLs i
+    ]
+
+-- FIXME this will break silently if the order of fields changes in the
+-- future
+instance FromJSON a => FromJSON (Info.InstalledPackageInfo_ a) where
+  parseJSON (Object v) = Info.InstalledPackageInfo <$>
+    v .: "id" <*>
+    v .: "name" <*>
+    v .: "license" <*>
+    v .: "copyright" <*>
+    v .: "maintainer" <*>
+    v .: "author" <*>
+    v .: "stability" <*>
+    v .: "homepage" <*>
+    v .: "package-url" <*>
+    v .: "synopsis" <*>
+    v .: "description" <*>
+    v .: "category" <*>
+    v .: "exposed" <*>
+    v .: "exposed-modules" <*>
+    v .: "hidden-modules" <*>
+    v .: "trusted" <*>
+    v .: "import-dirs" <*>
+    v .: "library-dirs" <*>
+    v .: "hs-libraries" <*>
+    v .: "extra-libraries" <*>
+    v .: "extra-ghci-libraries" <*>
+    v .: "include-dirs" <*>
+    v .: "includes" <*>
+    v .: "depends" <*>
+    v .: "hugs-options" <*>
+    v .: "cc-options" <*>
+    v .: "ld-options" <*>
+    v .: "framework-dirs" <*>
+    v .: "frameworks" <*>
+    v .: "haddock-interfaces" <*>
+    v .: "haddock-html"
+  parseJSON _ = mzero
