@@ -83,7 +83,14 @@ main t =
   pkgCommand =
     command "pkg" (info (subparser pkgSubcommands) idm)
   pkgSubcommands =
-    mconcat [pkgDump, pkgInstallLib, pkgUpdate, pkgUnregister, pkgInit]
+    mconcat
+      [ pkgDump
+      , pkgInstallLib
+      , pkgUpdate
+      , pkgUnregister
+      , pkgList
+      , pkgInit
+      ]
 
   pkgDump = command "dump" $ info (doDump <$> pkgDbStackParser) idm
     where
@@ -127,6 +134,10 @@ main t =
   pkgInit =
     command "init" $ flip info idm $
       initDB <$> argument str (metavar "PATH")
+
+  pkgList =
+    command "list" $ flip info idm $
+      Compiler.list t <$> pkgDbParser
 
   compilerCommand =
     command "compile" (info compiler idm)

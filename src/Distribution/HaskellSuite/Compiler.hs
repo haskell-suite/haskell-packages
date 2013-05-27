@@ -150,6 +150,20 @@ class IsPackageDB (DB compiler) => Is compiler where
 
         writePackageDB db packagesLeft
 
+  list
+    :: compiler
+    -> PackageDB
+    -> IO ()
+  list t dbspec = do
+    mbDb <- locateDB dbspec
+
+    case mbDb :: Maybe (DB compiler) of
+      Nothing -> return ()
+      Just db -> do
+        pkgs <- readPackageDB (maybeInitDB dbspec) db
+
+        forM_ pkgs $ putStrLn . display . installedPackageId
+
 removePackage :: InstalledPackageId -> Packages -> Packages
 removePackage pkgid = filter ((pkgid /=) . installedPackageId)
 
