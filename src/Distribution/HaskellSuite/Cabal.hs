@@ -82,7 +82,7 @@ main t =
 
   pkgCommand =
     command "pkg" (info (subparser pkgSubcommands) idm)
-  pkgSubcommands = mconcat [pkgDump, pkgInstallLib, pkgUpdate]
+  pkgSubcommands = mconcat [pkgDump, pkgInstallLib, pkgUpdate, pkgInit]
 
   pkgDump = command "dump" $ info (doDump <$> pkgDbStackParser) idm
     where
@@ -118,6 +118,10 @@ main t =
     case pi of
       ParseOk _ a -> Compiler.register t d a
       ParseFailed e -> putStrLn $ snd $ locatedErrorMsg e
+
+  pkgInit =
+    command "init" $ flip info idm $
+      initDB <$> argument str (metavar "PATH")
 
   compilerCommand =
     command "compile" (info compiler idm)
