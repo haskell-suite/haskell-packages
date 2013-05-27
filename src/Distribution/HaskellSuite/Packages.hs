@@ -18,6 +18,7 @@ module Distribution.HaskellSuite.Packages
   -- * IsPackageDB class and friends
   , IsPackageDB(..)
   , MaybeInitDB(..)
+  , maybeInitDB
   -- * StandardDB
   -- | 'StandardDB' is a simple `IsPackageDB` implementation which cover many
   -- (but not all) use cases. Please see the source code to see what
@@ -68,29 +69,34 @@ import Distribution.ModuleName(ModuleName)
 type Packages = [Info.InstalledPackageInfo]
 
 -- | Get all packages that are registered in a particular database
+--
+-- If the database doesn't exist, the behaviour is determined by
+-- 'maybeInitDB'.
 getInstalledPackages
   :: forall db. IsPackageDB db
-  => MaybeInitDB
-  -> Proxy db
+  => Proxy db
   -> PackageDB
   -> IO Packages
-getInstalledPackages initDb _proxy dbspec = do
+getInstalledPackages _proxy dbspec = do
   mbDb <- locateDB dbspec
 
   maybe
     (return [])
-    (readPackageDB initDb)
+    (readPackageDB $ maybeInitDB dbspec)
     (mbDb :: Maybe db)
 
 -- | Try to retrieve an 'InstalledPackageInfo' for each of
 -- 'InstalledPackageId's from a specified set of 'PackageDB's.
 --
 -- May throw a 'PkgInfoNotFound' exception.
+--
+-- If a database doesn't exist, the behaviour is determined by
+-- 'maybeInitDB'.
 readPackagesInfo
   :: IsPackageDB db
-  => MaybeInitDB -> Proxy db -> [PackageDB] -> [InstalledPackageId] -> IO Packages
-readPackagesInfo initDb proxyDb dbs pkgIds = do
-  allPkgInfos <- concat <$> mapM (getInstalledPackages initDb proxyDb) dbs
+  => Proxy db -> [PackageDB] -> [InstalledPackageId] -> IO Packages
+readPackagesInfo proxyDb dbs pkgIds = do
+  allPkgInfos <- concat <$> mapM (getInstalledPackages proxyDb) dbs
   let
     pkgMap =
       Map.fromList
@@ -154,6 +160,21 @@ class IsPackageDB db where
 -- | A flag which tells whether the library should create an empty package
 -- database if it doesn't exist yet
 data MaybeInitDB = InitDB | Don'tInitDB
+
+-- | This function determines whether a package database should be
+-- initialized if it doesn't exist yet.
+--
+-- The rule is this: if it is a global or a user database, then initialize
+-- it; otherwise, don't.
+--
+-- Rationale: if the database was specified by the user, she could have
+-- made a mistake in the path, and we'd rather report it. On the other
+-- hand, it is our responsibility to ensure that the user and global
+-- databases exist.
+maybeInitDB :: PackageDB -> MaybeInitDB
+maybeInitDB GlobalPackageDB = InitDB
+maybeInitDB UserPackageDB   = InitDB
+maybeInitDB SpecificPackageDB {} = Don'tInitDB
 
 ----------------
 -- StandardDB --

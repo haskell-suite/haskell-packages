@@ -57,7 +57,7 @@ main t =
 
   compilerVersion =
     flag'
-      (printf "%s %s" name versionStr)
+      (printf "%s %s" (Compiler.name t) versionStr)
       (long "compiler-version")
 
   hspkgVersion =
@@ -80,8 +80,6 @@ main t =
       (printf "%s %s\nBased on haskell-packages version %s\n" (Compiler.name t) versionStr ourVersionStr)
       (long "version")
 
-  compilerName
-
   pkgCommand =
     command "pkg" (info (subparser pkgSubcommands) idm)
   pkgSubcommands = mconcat [pkgDump, pkgInstallLib, pkgUpdate]
@@ -93,7 +91,6 @@ main t =
           fmap concat $
           forM dbs $ \db ->
             getInstalledPackages
-              InitDB
               (Proxy :: Proxy (Compiler.DB c))
               db
         putStr $ intercalate "---\n" $ map showInstalledPackageInfo pkgs
