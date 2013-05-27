@@ -57,7 +57,7 @@ main t =
 
   compilerVersion =
     flag'
-      (printf "%s %s" (Compiler.name t) versionStr)
+      (printf "%s %s\n" (Compiler.name t) versionStr)
       (long "compiler-version")
 
   hspkgVersion =
