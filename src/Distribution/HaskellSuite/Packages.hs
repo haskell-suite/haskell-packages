@@ -32,6 +32,7 @@ module Distribution.HaskellSuite.Packages
   -- 'writePackageDB' and 'readPackageDB' for your own databases.
   , writeDB
   , readDB
+  , initDB
   -- * Exceptions
   , PkgDBError(..)
   , PkgInfoError(..)
@@ -211,13 +212,14 @@ readDB maybeInit path = do
 
   where
     maybeDoInitDB
-      | InitDB <- maybeInit = do
-          dbExists <- doesFileExist path
-
-          unless dbExists $ do
-            writeDB path []
-
+      | InitDB <- maybeInit = initDB path
       | otherwise = return ()
+
+initDB :: FilePath -> IO ()
+initDB path = do
+  dbExists <- doesFileExist path
+  unless dbExists $ do
+    writeDB path []
 
 haskellPackagesDir :: IO FilePath
 haskellPackagesDir = getAppUserDataDirectory "haskell-packages"
