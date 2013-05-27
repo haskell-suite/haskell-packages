@@ -107,7 +107,7 @@ class IsPackageDB (DB compiler) => Is compiler where
     case mbDb :: Maybe (DB compiler) of
       Nothing -> throwIO RegisterNullDB
       Just db -> do
-        pkgs <- readPackageDB InitDB db
+        pkgs <- readPackageDB (maybeInitDB dbspec) db
         let pkgid = installedPackageId pkg
         writePackageDB db $ pkg : removePackage pkgid pkgs
 
