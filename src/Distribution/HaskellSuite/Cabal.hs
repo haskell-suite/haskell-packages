@@ -82,7 +82,8 @@ main t =
 
   pkgCommand =
     command "pkg" (info (subparser pkgSubcommands) idm)
-  pkgSubcommands = mconcat [pkgDump, pkgInstallLib, pkgUpdate, pkgInit]
+  pkgSubcommands =
+    mconcat [pkgDump, pkgInstallLib, pkgUpdate, pkgUnregister, pkgInit]
 
   pkgDump = command "dump" $ info (doDump <$> pkgDbStackParser) idm
     where
@@ -118,6 +119,10 @@ main t =
     case pi of
       ParseOk _ a -> Compiler.register t d a
       ParseFailed e -> putStrLn $ snd $ locatedErrorMsg e
+
+  pkgUnregister =
+    command "unregister" $ flip info idm $
+      Compiler.unregister t <$> pkgDbParser <*> pkgIdParser
 
   pkgInit =
     command "init" $ flip info idm $
@@ -166,6 +171,10 @@ pkgDbParser =
   flag' GlobalPackageDB (long "global") <|>
   flag' UserPackageDB   (long "user")   <|>
   (SpecificPackageDB <$> strOption (long "package-db" <> metavar "PATH"))
+
+pkgIdParser :: Parser PackageId
+pkgIdParser =
+  argument simpleParse (metavar "PACKAGE")
 
 pkgDbStackParser :: Parser PackageDBStack
 pkgDbStackParser =

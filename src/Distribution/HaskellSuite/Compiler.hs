@@ -29,11 +29,13 @@ import Distribution.Simple.Utils
 import Distribution.Verbosity
 import Distribution.InstalledPackageInfo
 import Distribution.Package
+import Distribution.Text
 import Distribution.ModuleName (ModuleName)
 import Control.Monad
 import Control.Exception
 import Data.Maybe
 import Data.List
+import Data.Function
 import Language.Haskell.Exts.Annotated.CPP
 import Language.Haskell.Exts.Extension
 
@@ -110,6 +112,43 @@ class IsPackageDB (DB compiler) => Is compiler where
         pkgs <- readPackageDB (maybeInitDB dbspec) db
         let pkgid = installedPackageId pkg
         writePackageDB db $ pkg : removePackage pkgid pkgs
+
+  -- | Unregister the package
+  unregister
+    :: compiler
+    -> PackageDB
+    -> PackageId
+    -> IO ()
+  unregister t dbspec pkg = do
+    let
+      pkgCriterion =
+        -- if the version is not specified, treat it as a wildcard
+        (case pkgVersion $ packageId pkg of
+          Version [] _ ->
+            ((==) `on` pkgName) pkg
+          _ ->
+            (==) pkg)
+        . sourcePackageId
+
+    mbDb <- locateDB dbspec
+
+    case mbDb :: Maybe (DB compiler) of
+      Nothing -> throwIO RegisterNullDB
+      Just db -> do
+        pkgs <- readPackageDB (maybeInitDB dbspec) db
+
+        let
+          (packagesRemoved, packagesLeft) = partition pkgCriterion pkgs
+
+        if null packagesRemoved
+          then
+            putStrLn $ "No packages removed"
+          else do
+            putStrLn "Packages removed:"
+            forM_ packagesRemoved $ \p ->
+              putStrLn $ "  " ++ display (installedPackageId p)
+
+        writePackageDB db packagesLeft
 
 removePackage :: InstalledPackageId -> Packages -> Packages
 removePackage pkgid = filter ((pkgid /=) . installedPackageId)
