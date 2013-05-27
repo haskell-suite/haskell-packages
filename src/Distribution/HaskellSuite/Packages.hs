@@ -215,6 +215,8 @@ readDB maybeInit path = do
       | InitDB <- maybeInit = initDB path
       | otherwise = return ()
 
+-- | If the path does not exist, create an empty database there. Otherwise,
+-- do nothing.
 initDB :: FilePath -> IO ()
 initDB path = do
   dbExists <- doesFileExist path
