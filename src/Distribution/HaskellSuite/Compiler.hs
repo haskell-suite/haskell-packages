@@ -45,6 +45,7 @@ type CompileFn
   -> Maybe Language -- ^ optional default language
   -> [Extension] -- ^ default extensions
   -> CpphsOptions -- ^ CPP options
+  -> PackageId -- ^ name and version of the package being compiled
   -> PackageDBStack -- ^ package db stack to use
   -> [InstalledPackageId] -- ^ dependencies
   -> [FilePath] -- ^ list of files to compile

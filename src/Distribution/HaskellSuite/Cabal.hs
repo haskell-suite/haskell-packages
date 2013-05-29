@@ -142,16 +142,21 @@ main t =
   compilerCommand =
     command "compile" (info compiler idm)
   compiler =
-    (\srcDirs buildDir lang exts cppOpts dbStack pkgids mods ->
-        Compiler.compile t buildDir lang exts cppOpts dbStack pkgids =<< findModules srcDirs mods) <$>
+    (\srcDirs buildDir lang exts cppOpts pkg dbStack deps mods ->
+        Compiler.compile t buildDir lang exts cppOpts pkg dbStack deps =<< findModules srcDirs mods) <$>
       (many $ strOption (short 'i' <> metavar "PATH")) <*>
       (strOption (long "build-dir" <> metavar "PATH") <|> pure ".") <*>
       (optional $ classifyLanguage <$> strOption (short 'G' <> metavar "language")) <*>
       (many $ parseExtension <$> strOption (short 'X' <> metavar "extension")) <*>
       cppOptsParser <*>
+      (nullOption (long "package-name" <> metavar "NAME-VERSION" <> reader pkgNameReader)) <*>
       pkgDbStackParser <*>
       (many $ InstalledPackageId <$> strOption (long "package-id")) <*>
       arguments str (metavar "MODULE")
+    where
+      pkgNameReader =
+        maybe (Left $ ErrorMsg "invalid package name") Right .
+        simpleParse
 
 data ModuleNotFound = ModuleNotFound String
   deriving Typeable
