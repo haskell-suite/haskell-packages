@@ -41,13 +41,13 @@ import Language.Haskell.Exts.Extension
 
 -- | Compilation function
 type CompileFn
-  =  FilePath
-  -> Maybe Language
-  -> [Extension]
-  -> CpphsOptions
-  -> PackageDBStack
-  -> [InstalledPackageId]
-  -> [FilePath]
+  =  FilePath -- ^ build directory
+  -> Maybe Language -- ^ optional default language
+  -> [Extension] -- ^ default extensions
+  -> CpphsOptions -- ^ CPP options
+  -> PackageDBStack -- ^ package db stack to use
+  -> [InstalledPackageId] -- ^ dependencies
+  -> [FilePath] -- ^ list of files to compile
   -> IO ()
 
 -- | An abstraction over a Haskell compiler.
