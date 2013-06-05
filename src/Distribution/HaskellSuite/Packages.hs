@@ -62,6 +62,8 @@ import Data.Version (Version(..))
 import Distribution.Simple.Compiler (PackageDB(..))
 import Distribution.License (License(..))
 import Distribution.ModuleName(ModuleName)
+import Distribution.Simple.Utils
+import Distribution.Verbosity
 
 --------------
 -- Querying --
@@ -221,6 +223,7 @@ initDB :: FilePath -> IO ()
 initDB path = do
   dbExists <- doesFileExist path
   unless dbExists $ do
+    createDirectoryIfMissingVerbose silent True (dropFileName path)
     writeDB path []
 
 haskellPackagesDir :: IO FilePath
