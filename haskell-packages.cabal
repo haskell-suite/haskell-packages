@@ -4,14 +4,14 @@
 name:                haskell-packages
 version:             0.1
 synopsis:            Haskell suite library for package management and integration with Cabal
-description:         See <http://haskell-suite.github.io/haskell-packages/>
+description:         See <http://documentup.com/haskell-suite/haskell-packages>
 license:             MIT
 license-file:        LICENSE
 author:              Roman Cheplyaka
 maintainer:          Roman Cheplyaka <roma@ro-che.info>
 copyright:           (c) Roman Cheplyaka 2012
 category:            Distribution
-homepage:            http://haskell-suite.github.io/haskell-packages/
+homepage:            http://documentup.com/haskell-suite/haskell-packages
 bug-reports:         https://github.com/haskell-suite/haskell-packages/issues
 build-type:          Simple
 cabal-version:       >=1.10
