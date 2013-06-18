@@ -26,7 +26,22 @@ module Distribution.HaskellSuite.Packages
   , StandardDB(..)
   , IsDBName(..)
 
-  -- * Auxiliary functions
+  -- * Relative paths in package databases
+  -- | Traditionally, the paths in package databases are absolute.
+  --
+  -- haskell-packages allows relative file paths in databases, which is
+  -- useful in some cases (e.g. relocatable global package database).
+  --
+  -- By default, 'readPackageDB' (for 'StandardDB') treats relative paths
+  -- as being relative to the database path.
+  --
+  -- However, Cabal still passes absolute file names, and by default
+  -- 'writePackageDB' stores them verbatim. To change this, use
+  -- 'makePkgInfoRelative' in your implementation of 'writePackageDB'.
+  , makePkgInfoRelative
+  , makePkgInfoAbsolute
+
+  -- * Direct database manipulation
   -- | 'writeDB' and 'readDB' perform (de)serialization of a package
   -- database using a simple JSON encoding. You may use these to implement
   -- 'writePackageDB' and 'readPackageDB' for your own databases.
@@ -191,10 +206,43 @@ data StandardDB name = StandardDB FilePath
 instance IsDBName name => IsPackageDB (StandardDB name) where
   dbName = retag (getDBName :: Tagged name String)
 
-  readPackageDB init (StandardDB db) = readDB init db
+  readPackageDB init (StandardDB db) =
+    map (makePkgInfoAbsolute (dropFileName db)) <$> readDB init db
   writePackageDB (StandardDB db) = writeDB db
   globalDB = return Nothing
   dbFromPath path = return $ StandardDB path
+
+---------------------------------
+-- Absolute and relative paths --
+---------------------------------
+
+-- | Make all paths in the package info relative to the given base
+-- directory.
+makePkgInfoRelative :: FilePath -> Info.InstalledPackageInfo -> Info.InstalledPackageInfo
+makePkgInfoRelative base info =
+  mapPaths (makeRelative base) info
+
+-- | Make all relative paths in the package info absolute, interpreting
+-- them relative to the given base directory.
+makePkgInfoAbsolute :: FilePath -> Info.InstalledPackageInfo -> Info.InstalledPackageInfo
+makePkgInfoAbsolute base info =
+  flip mapPaths info $ \f ->
+    if isRelative f
+      then base </> f
+      else f
+
+-- | Apply a given function to all file paths contained in the package info
+mapPaths
+  :: (FilePath -> FilePath)
+  -> (Info.InstalledPackageInfo -> Info.InstalledPackageInfo)
+mapPaths f info = info
+  { Info.importDirs = map f (Info.importDirs info)
+  , Info.libraryDirs = map f (Info.libraryDirs info)
+  , Info.includeDirs = map f (Info.includeDirs info)
+  , Info.frameworkDirs = map f (Info.frameworkDirs info)
+  , Info.haddockInterfaces = map f (Info.haddockInterfaces info)
+  , Info.haddockHTMLs = map f (Info.haddockHTMLs info)
+  }
 
 -------------------------
 -- Auxiliary functions --
