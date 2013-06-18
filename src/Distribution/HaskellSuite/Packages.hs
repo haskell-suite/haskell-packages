@@ -40,6 +40,7 @@ module Distribution.HaskellSuite.Packages
   -- 'makePkgInfoRelative' in your implementation of 'writePackageDB'.
   , makePkgInfoRelative
   , makePkgInfoAbsolute
+  , mapPaths
 
   -- * Direct database manipulation
   -- | 'writeDB' and 'readDB' perform (de)serialization of a package
