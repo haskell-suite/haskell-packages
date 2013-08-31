@@ -1,5 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable,
              TemplateHaskell, ScopedTypeVariables, OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Distribution.HaskellSuite.Packages
   (
   -- * Querying package databases

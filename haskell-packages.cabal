@@ -31,6 +31,7 @@ library
   default-language:    Haskell2010
   Hs-source-dirs:
     src
+  ghc-options: -Wall -fno-warn-name-shadowing
   exposed-modules:
     Distribution.HaskellSuite
     Distribution.HaskellSuite.Compiler

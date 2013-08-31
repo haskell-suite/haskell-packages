@@ -33,7 +33,6 @@ import Distribution.Text
 import Distribution.ModuleName (ModuleName)
 import Control.Monad
 import Control.Exception
-import Data.Maybe
 import Data.List
 import Data.Function
 import Language.Haskell.Exts.Annotated.CPP
@@ -104,7 +103,7 @@ class IsPackageDB (DB compiler) => Is compiler where
     -> PackageDB
     -> InstalledPackageInfo
     -> IO ()
-  register t dbspec pkg = do
+  register _tool dbspec pkg = do
     mbDb <- locateDB dbspec
 
     case mbDb :: Maybe (DB compiler) of
@@ -120,7 +119,7 @@ class IsPackageDB (DB compiler) => Is compiler where
     -> PackageDB
     -> PackageId
     -> IO ()
-  unregister t dbspec pkg = do
+  unregister _tool dbspec pkg = do
     let
       pkgCriterion =
         -- if the version is not specified, treat it as a wildcard
@@ -155,7 +154,7 @@ class IsPackageDB (DB compiler) => Is compiler where
     :: compiler
     -> PackageDB
     -> IO ()
-  list t dbspec = do
+  list _tool dbspec = do
     mbDb <- locateDB dbspec
 
     case mbDb :: Maybe (DB compiler) of

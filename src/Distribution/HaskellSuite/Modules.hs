@@ -28,12 +28,9 @@ module Distribution.HaskellSuite.Modules
   , ModName(..)
   , convertModuleName
   ) where
-import Control.Arrow
 import Distribution.HaskellSuite.Packages
-import Distribution.Simple.Compiler
 import Distribution.Simple.Utils
 import Distribution.InstalledPackageInfo
-import Distribution.Package
 import Distribution.Text
 import Distribution.ModuleName
 import Control.Applicative
@@ -43,12 +40,8 @@ import Control.Monad.Cont
 import Control.Monad.Error
 import Control.Monad.Reader
 import Control.Monad.Writer
-import Control.Exception
 import Data.List
-import Data.Typeable
-import Data.Proxy
 import qualified Data.Map as Map
-import Text.Printf
 import System.FilePath
 
 -- | This class defines the interface that is used by 'getModuleInfo', so

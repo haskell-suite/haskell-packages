@@ -165,7 +165,10 @@ instance Show ModuleNotFound where
   show (ModuleNotFound mod) = printf "Module %s not found" mod
 instance Exception ModuleNotFound
 
+findModules :: [FilePath] -> [String] -> IO [FilePath]
 findModules srcDirs = mapM (findModule srcDirs)
+
+findModule :: [FilePath] -> String -> IO FilePath
 findModule srcDirs mod = do
   r <- runEitherT $ sequence_ (checkInDir <$> srcDirs <*> exts)
   case r of
