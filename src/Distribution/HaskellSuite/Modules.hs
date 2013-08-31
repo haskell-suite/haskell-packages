@@ -1,6 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, TypeFamilies,
              FlexibleInstances, TypeSynonymInstances,
-             DeriveDataTypeable #-}
+             DeriveDataTypeable, StandaloneDeriving, MultiParamTypeClasses, UndecidableInstances, ScopedTypeVariables #-}
 module Distribution.HaskellSuite.Modules
   (
   -- * Module monad
@@ -26,7 +26,7 @@ module Distribution.HaskellSuite.Modules
   , ModName(..)
   , convertModuleName
   ) where
-
+import Control.Arrow
 import Distribution.HaskellSuite.Packages
 import Distribution.Simple.Compiler
 import Distribution.Simple.Utils
@@ -37,7 +37,10 @@ import Distribution.ModuleName
 import Control.Applicative
 import Control.Monad
 import Control.Monad.State
+import Control.Monad.Cont
+import Control.Monad.Error
 import Control.Monad.Reader
+import Control.Monad.Writer
 import Control.Exception
 import Data.List
 import Data.Typeable
@@ -110,10 +113,11 @@ findModule'sPackage pkgs m = find ((convertModuleName m `elem`) . exposedModules
 --
 -- @i@ is the type of module info, @m@ is the underlying monad.
 newtype ModuleT i m a =
-  ModuleT
+  ModuleT { unModuleT ::
     (StateT (Map.Map ModuleName i)
       (ReaderT (Packages, [FilePath] -> ModuleName -> m i) m)
       a)
+  }
   deriving (Functor, Applicative, Monad)
 
 instance MonadTrans (ModuleT i) where
@@ -129,6 +133,30 @@ instance (Functor m, Monad m) => MonadModule (ModuleT i m) where
   getPackages = ModuleT $ asks fst
   readModuleInfo dirs mod =
     lift =<< ModuleT (asks snd) <*> pure dirs <*> pure (convertModuleName mod)
+
+mapModuleT :: Monad m => (m a -> m b) -> ModuleT i m a -> ModuleT i m b
+mapModuleT f m = ModuleT $ mapStateT (mapReaderT f') (unModuleT m)
+  where
+    f' ma = do
+      (a,c) <- ma
+      b <- f (return a)
+      return (b,c)
+
+instance MonadReader r m => MonadReader r (ModuleT i m) where
+  ask    = lift ask
+  local  = mapModuleT . local
+  reader = lift . reader
+
+instance MonadState s m => MonadState s (ModuleT i m) where
+  get   = lift get
+  put   = lift . put
+  state = lift . state
+
+deriving instance MonadWriter w m => MonadWriter w (ModuleT i m)
+
+deriving instance MonadError e m => MonadError e (ModuleT i m)
+
+deriving instance MonadCont m => MonadCont (ModuleT i m)
 
 -- | Run a 'ModuleT' action
 runModuleT
