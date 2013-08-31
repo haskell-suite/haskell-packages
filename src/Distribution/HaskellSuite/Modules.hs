@@ -1,6 +1,8 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, TypeFamilies,
              FlexibleInstances, TypeSynonymInstances,
-             DeriveDataTypeable, StandaloneDeriving, MultiParamTypeClasses, UndecidableInstances, ScopedTypeVariables #-}
+             DeriveDataTypeable, StandaloneDeriving,
+             MultiParamTypeClasses, UndecidableInstances,
+             ScopedTypeVariables #-}
 module Distribution.HaskellSuite.Modules
   (
   -- * Module monad
