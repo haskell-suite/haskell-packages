@@ -50,7 +50,7 @@ library
     , directory
     , filepath
     , containers
-    , mtl
+    , mtl >= 2.1
     , hse-cpp
     , EitherT
     , haskell-src-exts >= 1.14
