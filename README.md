@@ -39,7 +39,7 @@ the `Distribution.HaskellSuite.Compiler` module for details.
 ## Using other compilers
 
 Some compilers produce artifacts that you may want to use. A good example is the
-`gen-iface` compiler from haskell-names which generates an *interface* for each
+`hs-gen-iface` compiler from haskell-names which generates an *interface* for each
 module — the set of all named entities (functions, types, classes) that are
 exported by that module. This information can be then used either by other
 compilers, or by tools like IDEs.
