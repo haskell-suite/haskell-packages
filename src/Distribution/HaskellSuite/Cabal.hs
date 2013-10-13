@@ -19,6 +19,7 @@ import Distribution.Package
 import Distribution.Text
 import Distribution.ModuleName hiding (main)
 import Options.Applicative
+import Options.Applicative.Types
 import Control.Monad
 import Control.Monad.Trans.Either
 import Control.Exception
@@ -108,7 +109,7 @@ main t =
       (strOption (long "build-dir" <> metavar "PATH")) <*>
       (strOption (long "target-dir" <> metavar "PATH")) <*>
       (optional $ strOption (long "dynlib-target-dir" <> metavar "PATH")) <*>
-      (nullOption (long "package-id" <> metavar "ID" <> reader parsePackageId)) <*>
+      (nullOption (long "package-id" <> metavar "ID" <> reader (ReadM . parsePackageId))) <*>
       (arguments simpleParse (metavar "MODULE"))
     where
       parsePackageId str =
@@ -154,7 +155,7 @@ main t =
       (many $ InstalledPackageId <$> strOption (long "package-id")) <*>
       arguments str (metavar "MODULE")
     where
-      pkgNameReader =
+      pkgNameReader = ReadM .
         maybe (Left $ ErrorMsg "invalid package name") Right .
         simpleParse
 
