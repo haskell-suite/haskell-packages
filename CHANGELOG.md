@@ -4,6 +4,12 @@ Changes
 Version 0.2.3
 -------------
 
+* Upgrade to optparse-applicative 0.6
+* Provide the `--help` option for subcommands
+
+Version 0.2.3
+-------------
+
 Relax Cabal dependency constraint to include Cabal-1.14
 
 Version 0.2.2
