@@ -50,7 +50,7 @@ main t =
       , hspkgVersion
       , supportedLanguages
       , supportedExtensions
-      , subparser $ pkgCommand <> compilerCommand
+      , hsubparser $ pkgCommand <> compilerCommand
       ]
 
   versionStr = showVersion $ Compiler.version t
@@ -82,7 +82,7 @@ main t =
       (long "version")
 
   pkgCommand =
-    command "pkg" (info (subparser pkgSubcommands) idm)
+    command "pkg" (info (hsubparser pkgSubcommands) idm)
   pkgSubcommands =
     mconcat
       [ pkgDump
