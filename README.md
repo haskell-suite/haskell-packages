@@ -49,16 +49,14 @@ very easy to use its artifacts. See `Distribution.HaskellSuite.Packages` for
 package resolution and `Distribution.HaskellSuite.Modules` for module
 resolution.
 
-## Installation
-
-It doesn't matter what Cabal version you use together with haskell-packages, but
-if you want to invoke a haskell-packages compiler from Cabal (see
-[Usage](#usage)), you need to build our [fork of Cabal][Cabal]. Eventually it
-will be merged into Cabal.
-
-[Cabal]: https://github.com/feuerbach/Cabal
-
 ## Usage
+
+First, make sure that you have cabal-install from git:
+
+    git clone git@github.com:haskell/cabal.git
+    cd cabal
+    (cd Cabal && cabal install)
+    (cd cabal-install && cabal install)
 
 To compile a Haskell package using a haskell-packages tool:
 
