@@ -44,7 +44,7 @@ library
   build-depends:
       base >=4.5 && < 5
     , optparse-applicative >= 0.6
-    , aeson == 0.7.*
+    , aeson >= 0.6 && < 0.8
     , bytestring >=0.9
     , Cabal >= 1.14
     , deepseq
