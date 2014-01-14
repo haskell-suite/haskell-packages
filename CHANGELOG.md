@@ -1,6 +1,12 @@
 Changes
 =======
 
+Version 0.2.3.3
+---------------
+
+The fixed version of 0.2.3.2. (The released tarball for 0.2.3.2 contained some
+unintended changes.)
+
 Version 0.2.3.2
 ---------------
 
