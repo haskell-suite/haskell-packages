@@ -1,8 +1,13 @@
 Changes
 =======
 
-Version 0.2.3
--------------
+Version 0.2.3.2
+---------------
+
+Drop upper version bound on aeson.
+
+Version 0.2.3.1
+---------------
 
 * Upgrade to optparse-applicative 0.6
 * Provide the `--help` option for subcommands
