@@ -64,3 +64,11 @@ To compile a Haskell package using a haskell-packages tool:
 
 where `$TOOL` may be either a full path to the compiler, or just an executable
 name if it's in `$PATH`.
+
+Maintainers
+-----------
+
+[Roman Cheplyaka](https://github.com/feuerbach) is the primary maintainer.
+
+[Adam Bergmark](https://github.com/bergmark) is the backup maintainer. Please
+get in touch with him if the primary maintainer cannot be reached.
