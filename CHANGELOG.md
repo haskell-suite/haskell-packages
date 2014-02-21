@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 0.2.3.4
+---------------
+
+Depend on `either` instead of `EitherT`
+
 Version 0.2.3.3
 ---------------
 
