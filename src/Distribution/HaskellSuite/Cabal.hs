@@ -39,7 +39,13 @@ import Language.Haskell.Exts.Annotated.CPP
 main
   :: forall c . Compiler.Is c
   => c -> IO ()
-main t =
+main = customMain empty
+
+customMain
+  :: forall c . Compiler.Is c
+  => Parser (IO ())
+  -> c -> IO ()
+customMain additionalActions t =
   join $ customExecParser (prefs noBacktrack) $ info (helper <*> optParser) idm
   where
 
@@ -51,6 +57,7 @@ main t =
       , supportedLanguages
       , supportedExtensions
       , hsubparser $ pkgCommand <> compilerCommand
+      , additionalActions
       ]
 
   versionStr = showVersion $ Compiler.version t
