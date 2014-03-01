@@ -2,7 +2,7 @@
 {-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables #-}
 
 module Distribution.HaskellSuite.Cabal
-  ( main )
+  ( main, customMain )
   where
 
 import Data.Typeable
