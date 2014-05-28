@@ -94,6 +94,7 @@ class IsPackageDB (DB compiler) => Is compiler where
       -> [ModuleName]
       -> IO ()
   installLib t buildDir targetDir _dynlibTargetDir _pkg mods =
+    -- see https://github.com/haskell-suite/haskell-packages/pull/17
     forM_ (fileExtensions t) $ \ext -> do
       findModuleFiles [buildDir] [ext] mods
         >>= installOrdinaryFiles normal targetDir
