@@ -94,8 +94,9 @@ class IsPackageDB (DB compiler) => Is compiler where
       -> [ModuleName]
       -> IO ()
   installLib t buildDir targetDir _dynlibTargetDir _pkg mods =
-    findModuleFiles [buildDir] (fileExtensions t) mods
-      >>= installOrdinaryFiles normal targetDir
+    forM_ (fileExtensions t) $ \ext -> do
+      findModuleFiles [buildDir] [ext] mods
+        >>= installOrdinaryFiles normal targetDir
 
   -- | Register the package in the database. If a package with the same id
   -- is already installed, it should be replaced by the new one.
