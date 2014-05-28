@@ -1,6 +1,13 @@
 Changes
 =======
 
+Version 0.2.4
+-------------
+
+* Add `customMain`
+* Fix a bug where only one of multiple output files with the same base name but
+  different extensions would be copied on installation
+
 Version 0.2.3.4
 ---------------
 
