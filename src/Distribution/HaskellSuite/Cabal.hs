@@ -220,7 +220,7 @@ cppOptsParser = appEndo <$> allMod <*> pure defaultCpphsOptions
           def :: (String, String)
           def =
             case span (/= '=') str of
-              (_, []) -> (str, "")
+              (_, []) -> (str, "1")
               (sym, _:var) -> (sym, var)
           in Endo $ \opts -> opts { defines = def : defines opts }
 
