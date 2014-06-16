@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 0.2.4.1
+---------------
+
+Fix a bug with empty CPP defines (such as `-DFOO`)
+
 Version 0.2.4
 -------------
 
