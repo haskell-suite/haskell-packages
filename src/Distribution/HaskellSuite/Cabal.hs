@@ -21,7 +21,7 @@ import Distribution.ModuleName hiding (main)
 import Options.Applicative
 import Options.Applicative.Types
 import Control.Monad
-import Control.Monad.Trans.Either
+import Control.Monad.Trans.Except
 import Control.Exception
 import Text.Printf
 import qualified Distribution.HaskellSuite.Compiler as Compiler
@@ -178,7 +178,7 @@ findModules srcDirs = mapM (findModule srcDirs)
 
 findModule :: [FilePath] -> String -> IO FilePath
 findModule srcDirs mod = do
-  r <- runEitherT $ sequence_ (checkInDir <$> srcDirs <*> exts)
+  r <- runExceptT $ sequence_ (checkInDir <$> srcDirs <*> exts)
   case r of
     Left found -> return found
     Right {} -> throwIO $ ModuleNotFound mod
@@ -186,7 +186,7 @@ findModule srcDirs mod = do
   where
     exts = ["hs", "lhs"]
 
-    checkInDir dir ext = EitherT $ do
+    checkInDir dir ext = ExceptT $ do
       let file = dir </> toFilePath (fromString mod) <.> ext
       found <- doesFileExist file
       return $ if found

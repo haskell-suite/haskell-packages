@@ -48,6 +48,7 @@ library
     , containers
     , mtl >= 2.1
     , hse-cpp
-    , either
+    , transformers >= 0.3
+    , transformers-compat >= 0.3
     , haskell-src-exts >= 1.14
     , tagged
