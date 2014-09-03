@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 0.2.4.2
+---------------
+
+Update to optparse-applicative 0.10
+
 Version 0.2.4.1
 ---------------
 
