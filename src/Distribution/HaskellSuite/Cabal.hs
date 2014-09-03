@@ -116,8 +116,8 @@ customMain additionalActions t =
       (strOption (long "build-dir" <> metavar "PATH")) <*>
       (strOption (long "target-dir" <> metavar "PATH")) <*>
       (optional $ strOption (long "dynlib-target-dir" <> metavar "PATH")) <*>
-      (nullOption (long "package-id" <> metavar "ID" <> reader (ReadM . parsePackageId))) <*>
-      (arguments simpleParse (metavar "MODULE"))
+      (option (ReadM . parsePackageId) (long "package-id" <> metavar "ID")) <*>
+      (many $ argument simpleParse (metavar "MODULE"))
     where
       parsePackageId str =
         maybe
@@ -157,10 +157,10 @@ customMain additionalActions t =
       (optional $ classifyLanguage <$> strOption (short 'G' <> metavar "language")) <*>
       (many $ parseExtension <$> strOption (short 'X' <> metavar "extension")) <*>
       cppOptsParser <*>
-      (nullOption (long "package-name" <> metavar "NAME-VERSION" <> reader pkgNameReader)) <*>
+      (option pkgNameReader (long "package-name" <> metavar "NAME-VERSION")) <*>
       pkgDbStackParser <*>
       (many $ InstalledPackageId <$> strOption (long "package-id")) <*>
-      arguments str (metavar "MODULE")
+      (many $ argument str (metavar "MODULE"))
     where
       pkgNameReader = ReadM .
         maybe (Left $ ErrorMsg "invalid package name") Right .
