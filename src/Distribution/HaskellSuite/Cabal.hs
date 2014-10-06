@@ -116,14 +116,8 @@ customMain additionalActions t =
       (strOption (long "build-dir" <> metavar "PATH")) <*>
       (strOption (long "target-dir" <> metavar "PATH")) <*>
       (optional $ strOption (long "dynlib-target-dir" <> metavar "PATH")) <*>
-      (option (ReadM . parsePackageId) (long "package-id" <> metavar "ID")) <*>
-      (many $ argument simpleParse (metavar "MODULE"))
-    where
-      parsePackageId str =
-        maybe
-          (Left . ErrorMsg $ "could not parse package-id: " ++ str)
-          Right
-          (simpleParse str)
+      (option (simpleParseM "package-id") (long "package-id" <> metavar "ID")) <*>
+      (many $ argument (simpleParseM "module") (metavar "MODULE"))
 
   pkgUpdate =
     command "update" $ flip info idm $
@@ -157,14 +151,10 @@ customMain additionalActions t =
       (optional $ classifyLanguage <$> strOption (short 'G' <> metavar "language")) <*>
       (many $ parseExtension <$> strOption (short 'X' <> metavar "extension")) <*>
       cppOptsParser <*>
-      (option pkgNameReader (long "package-name" <> metavar "NAME-VERSION")) <*>
+      (option (simpleParseM "package name") (long "package-name" <> metavar "NAME-VERSION")) <*>
       pkgDbStackParser <*>
       (many $ InstalledPackageId <$> strOption (long "package-id")) <*>
       (many $ argument str (metavar "MODULE"))
-    where
-      pkgNameReader = ReadM .
-        maybe (Left $ ErrorMsg "invalid package name") Right .
-        simpleParse
 
 data ModuleNotFound = ModuleNotFound String
   deriving Typeable
@@ -201,7 +191,7 @@ pkgDbParser =
 
 pkgIdParser :: Parser PackageId
 pkgIdParser =
-  argument simpleParse (metavar "PACKAGE")
+  argument (simpleParseM "package-id") (metavar "PACKAGE")
 
 pkgDbStackParser :: Parser PackageDBStack
 pkgDbStackParser =
@@ -227,3 +217,19 @@ cppOptsParser = appEndo <$> allMod <*> pure defaultCpphsOptions
     includeDir =
       flip fmap (strOption (short 'I' <> metavar "PATH")) $
       \str -> Endo $ \opts -> opts { includes = str : includes opts }
+
+-- | 'simpleParse' is defined in "Distribution.Text" with type
+--
+-- >simpleParse :: Text a => String -> Maybe a
+--
+-- (It is similar to 'read'.)
+--
+-- 'simpleParseM' wraps it as a 'ReadM' value to be used for parsing
+-- command-line options
+simpleParseM :: Text a => String -> ReadM a
+simpleParseM entityName = do
+  str <- readerAsk
+  case simpleParse str of
+    Just thing -> return thing
+    Nothing -> readerError $
+      "could not parse " ++ entityName ++ " '" ++ str ++ "'"
