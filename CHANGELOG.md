@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 0.2.4.4
+---------------
+
+Put upper bound on Cabal
+
 Version 0.2.4.3
 ---------------
 
