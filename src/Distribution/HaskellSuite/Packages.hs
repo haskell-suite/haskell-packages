@@ -57,6 +57,7 @@ module Distribution.HaskellSuite.Packages
   where
 
 import Data.Aeson
+import Data.Aeson.TH
 import Data.Aeson.Types
 import Control.Applicative
 import qualified Data.ByteString      as BS
@@ -352,74 +353,11 @@ instance ToJSON InstalledPackageId where
 instance FromJSON InstalledPackageId where
   parseJSON = stdFromJSON
 
-instance ToJSON a => ToJSON (Info.InstalledPackageInfo_ a) where
-  toJSON i = object
-    [ "id" .= Info.installedPackageId i
-    , "name" .= Info.sourcePackageId i
-    , "license" .= Info.license i
-    , "copyright" .= Info.copyright i
-    , "maintainer" .= Info.maintainer i
-    , "author" .= Info.author i
-    , "stability" .= Info.stability i
-    , "homepage" .= Info.homepage i
-    , "package-url" .= Info.pkgUrl i
-    , "synopsis" .= Info.synopsis i
-    , "description" .= Info.description i
-    , "category" .= Info.category i
-    , "exposed" .= Info.exposed i
-    , "exposed-modules" .= Info.exposedModules i
-    , "hidden-modules" .= Info.hiddenModules i
-    , "trusted" .= Info.trusted i
-    , "import-dirs" .= Info.importDirs i
-    , "library-dirs" .= Info.libraryDirs i
-    , "hs-libraries" .= Info.hsLibraries i
-    , "extra-libraries" .= Info.extraLibraries i
-    , "extra-ghci-libraries" .= Info.extraGHCiLibraries i
-    , "include-dirs" .= Info.includeDirs i
-    , "includes" .= Info.includes i
-    , "depends" .= Info.depends i
-    , "hugs-options" .= Info.hugsOptions i
-    , "cc-options" .= Info.ccOptions i
-    , "ld-options" .= Info.ldOptions i
-    , "framework-dirs" .= Info.frameworkDirs i
-    , "frameworks" .= Info.frameworks i
-    , "haddock-interfaces" .= Info.haddockInterfaces i
-    , "haddock-html" .= Info.haddockHTMLs i
-    ]
+instance ToJSON PackageKey where
+  toJSON = stdToJSON
+instance FromJSON PackageKey where
+  parseJSON = stdFromJSON
 
--- FIXME this will break silently if the order of fields changes in the
--- future
-instance FromJSON a => FromJSON (Info.InstalledPackageInfo_ a) where
-  parseJSON (Object v) = Info.InstalledPackageInfo <$>
-    v .: "id" <*>
-    v .: "name" <*>
-    v .: "license" <*>
-    v .: "copyright" <*>
-    v .: "maintainer" <*>
-    v .: "author" <*>
-    v .: "stability" <*>
-    v .: "homepage" <*>
-    v .: "package-url" <*>
-    v .: "synopsis" <*>
-    v .: "description" <*>
-    v .: "category" <*>
-    v .: "exposed" <*>
-    v .: "exposed-modules" <*>
-    v .: "hidden-modules" <*>
-    v .: "trusted" <*>
-    v .: "import-dirs" <*>
-    v .: "library-dirs" <*>
-    v .: "hs-libraries" <*>
-    v .: "extra-libraries" <*>
-    v .: "extra-ghci-libraries" <*>
-    v .: "include-dirs" <*>
-    v .: "includes" <*>
-    v .: "depends" <*>
-    v .: "hugs-options" <*>
-    v .: "cc-options" <*>
-    v .: "ld-options" <*>
-    v .: "framework-dirs" <*>
-    v .: "frameworks" <*>
-    v .: "haddock-interfaces" <*>
-    v .: "haddock-html"
-  parseJSON _ = mzero
+deriveJSON defaultOptions ''Info.OriginalModule
+deriveJSON defaultOptions ''Info.ExposedModule
+deriveJSON defaultOptions ''Info.InstalledPackageInfo_
