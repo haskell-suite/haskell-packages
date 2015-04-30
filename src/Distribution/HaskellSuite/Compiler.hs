@@ -28,7 +28,7 @@ import {-# SOURCE #-} Distribution.HaskellSuite.Cabal
 import Distribution.Simple.Compiler
 import Distribution.Simple.Utils
 import Distribution.Verbosity
-import Distribution.InstalledPackageInfo
+import Distribution.InstalledPackageInfo (InstalledPackageInfo, sourcePackageId)
 import Distribution.Package
 import Distribution.Text
 import Distribution.ModuleName (ModuleName)

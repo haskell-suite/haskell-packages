@@ -102,7 +102,10 @@ getModuleInfo name = do
           return $ Just i
 
 findModule'sPackage :: ModName n => Packages -> n -> Maybe InstalledPackageInfo
-findModule'sPackage pkgs m = find ((convertModuleName m `elem`) . exposedModules) pkgs
+findModule'sPackage pkgs m =
+  find
+    ((convertModuleName m `elem`) . map exposedName . exposedModules)
+    pkgs
 
 -- | A standard module monad transformer.
 --
