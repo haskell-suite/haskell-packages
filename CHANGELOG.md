@@ -1,6 +1,13 @@
 Changes
 =======
 
+Version 0.3
+-----------
+
+Update to Cabal-1.22.
+
+Change the format of on-disk JSON interface files.
+
 Version 0.2.4.4
 ---------------
 
