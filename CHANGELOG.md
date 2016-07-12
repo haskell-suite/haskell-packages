@@ -1,6 +1,12 @@
 Changes
 =======
 
+Version 0.4
+-----------
+
+Update to Cabal-1.24.
+Update to aeson-0.11.0.0.
+
 Version 0.3
 -----------
 

@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                haskell-packages
-version:             0.3
+version:             0.4
 synopsis:            Haskell suite library for package management and integration with Cabal
 description:         See <http://documentup.com/haskell-suite/haskell-packages>
 license:             MIT
@@ -39,9 +39,9 @@ library
   build-depends:
       base >=4.5 && < 5
     , optparse-applicative >= 0.11
-    , aeson >= 0.6
+    , aeson >= 0.11
     , bytestring >= 0.9
-    , Cabal == 1.22.*
+    , Cabal == 1.24.*
     , deepseq
     , directory
     , filepath

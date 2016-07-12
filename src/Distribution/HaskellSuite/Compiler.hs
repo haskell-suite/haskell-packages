@@ -47,7 +47,7 @@ type CompileFn
   -> CpphsOptions -- ^ CPP options
   -> PackageId -- ^ name and version of the package being compiled
   -> PackageDBStack -- ^ package db stack to use
-  -> [InstalledPackageId] -- ^ dependencies
+  -> [UnitId] -- ^ dependencies
   -> [FilePath] -- ^ list of files to compile
   -> IO ()
 
@@ -113,7 +113,7 @@ class IsPackageDB (DB compiler) => Is compiler where
       Nothing -> throwIO RegisterNullDB
       Just db -> do
         pkgs <- readPackageDB (maybeInitDB dbspec) db
-        let pkgid = installedPackageId pkg
+        let pkgid = installedUnitId pkg
         writePackageDB db $ pkg : removePackage pkgid pkgs
 
   -- | Unregister the package
@@ -149,7 +149,7 @@ class IsPackageDB (DB compiler) => Is compiler where
           else do
             putStrLn "Packages removed:"
             forM_ packagesRemoved $ \p ->
-              putStrLn $ "  " ++ display (installedPackageId p)
+              putStrLn $ "  " ++ display (installedUnitId p)
 
         writePackageDB db packagesLeft
 
@@ -165,10 +165,10 @@ class IsPackageDB (DB compiler) => Is compiler where
       Just db -> do
         pkgs <- readPackageDB (maybeInitDB dbspec) db
 
-        forM_ pkgs $ putStrLn . display . installedPackageId
+        forM_ pkgs $ putStrLn . display . installedUnitId
 
-removePackage :: InstalledPackageId -> Packages -> Packages
-removePackage pkgid = filter ((pkgid /=) . installedPackageId)
+removePackage :: UnitId -> Packages -> Packages
+removePackage pkgid = filter ((pkgid /=) . installedUnitId)
 
 data Simple db = Simple
   { stName :: String

@@ -153,7 +153,7 @@ customMain additionalActions t =
       cppOptsParser <*>
       (option (simpleParseM "package name") (long "package-name" <> metavar "NAME-VERSION")) <*>
       pkgDbStackParser <*>
-      (many $ InstalledPackageId <$> strOption (long "package-id")) <*>
+      (many $ mkUnitId <$> strOption (long "package-id")) <*>
       (many $ argument str (metavar "MODULE"))
 
 data ModuleNotFound = ModuleNotFound String

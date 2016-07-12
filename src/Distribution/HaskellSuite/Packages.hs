@@ -76,7 +76,6 @@ import System.FilePath
 import System.Directory
 
 -- The following imports are needed only for JSON instances
-import Data.Version (Version(..))
 import Distribution.Simple.Compiler (PackageDB(..))
 import Distribution.License (License(..))
 import Distribution.ModuleName(ModuleName)
@@ -107,7 +106,7 @@ getInstalledPackages _proxy dbspec = do
     (mbDb :: Maybe db)
 
 -- | Try to retrieve an 'InstalledPackageInfo' for each of
--- 'InstalledPackageId's from a specified set of 'PackageDB's.
+-- 'UnitId's from a specified set of 'PackageDB's.
 --
 -- May throw a 'PkgInfoNotFound' exception.
 --
@@ -115,13 +114,13 @@ getInstalledPackages _proxy dbspec = do
 -- 'maybeInitDB'.
 readPackagesInfo
   :: IsPackageDB db
-  => Proxy db -> [PackageDB] -> [InstalledPackageId] -> IO Packages
+  => Proxy db -> [PackageDB] -> [UnitId] -> IO Packages
 readPackagesInfo proxyDb dbs pkgIds = do
   allPkgInfos <- concat <$> mapM (getInstalledPackages proxyDb) dbs
   let
     pkgMap =
       Map.fromList
-        [ (Info.installedPackageId pkgInfo, pkgInfo)
+        [ (Info.installedUnitId pkgInfo, pkgInfo)
         | pkgInfo <- allPkgInfos
         ]
   forM pkgIds $ \pkgId ->
@@ -290,7 +289,7 @@ errPrefix = "haskell-suite package manager"
 data PkgDBError
   = BadPkgDB FilePath -- ^ package database could not be parsed or contains errors
   | PkgDBReadError FilePath IOException -- ^ package db file could not be read
-  | PkgExists InstalledPackageId -- ^ attempt to register an already present package id
+  | PkgExists UnitId -- ^ attempt to register an already present package id
   | RegisterNullDB -- ^ attempt to register in the global db when it's not present
   deriving (Typeable)
 instance Show PkgDBError where
@@ -306,7 +305,7 @@ instance Show PkgDBError where
 instance Exception PkgDBError
 
 data PkgInfoError
-  = PkgInfoNotFound InstalledPackageId
+  = PkgInfoNotFound UnitId
   -- ^ requested package id could not be found in any of the package databases
   deriving Typeable
 instance Exception PkgInfoError
@@ -328,11 +327,6 @@ instance ToJSON License where
 instance FromJSON License where
   parseJSON = stdFromJSON
 
-instance ToJSON Version where
-  toJSON = stdToJSON
-instance FromJSON Version where
-  parseJSON = stdFromJSON
-
 instance ToJSON ModuleName where
   toJSON = stdToJSON
 instance FromJSON ModuleName where
@@ -348,16 +342,16 @@ instance ToJSON PackageIdentifier where
 instance FromJSON PackageIdentifier where
   parseJSON = stdFromJSON
 
-instance ToJSON InstalledPackageId where
+instance ToJSON UnitId where
   toJSON = stdToJSON
-instance FromJSON InstalledPackageId where
+instance FromJSON UnitId where
   parseJSON = stdFromJSON
 
-instance ToJSON PackageKey where
+instance ToJSON AbiHash where
   toJSON = stdToJSON
-instance FromJSON PackageKey where
+instance FromJSON AbiHash where
   parseJSON = stdFromJSON
 
 deriveJSON defaultOptions ''Info.OriginalModule
 deriveJSON defaultOptions ''Info.ExposedModule
-deriveJSON defaultOptions ''Info.InstalledPackageInfo_
+deriveJSON defaultOptions ''Info.InstalledPackageInfo
