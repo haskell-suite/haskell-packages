@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                haskell-packages
-version:             0.4
+version:             0.5
 synopsis:            Haskell suite library for package management and integration with Cabal
 description:         See <http://documentup.com/haskell-suite/haskell-packages>
 license:             MIT
