@@ -34,7 +34,7 @@ import System.Directory
 -- It is actually important that we import 'defaultCpphsOptions' from
 -- hse-cpp and not from cpphs, because they are different. hse-cpp version
 -- provides the defaults more compatible with haskell-src-exts.
-import Language.Haskell.Exts.Annotated.CPP
+import Language.Haskell.Exts.CPP
 
 main
   :: forall c . Compiler.Is c

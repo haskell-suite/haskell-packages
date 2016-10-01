@@ -36,7 +36,7 @@ import Control.Monad
 import Control.Exception
 import Data.List
 import Data.Function
-import Language.Haskell.Exts.Annotated.CPP
+import Language.Haskell.Exts.CPP
 import Language.Haskell.Exts.Extension
 
 -- | Compilation function

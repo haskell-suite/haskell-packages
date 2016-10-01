@@ -47,8 +47,8 @@ library
     , filepath
     , containers
     , mtl >= 2.1
-    , hse-cpp
+    , hse-cpp >= 0.2
     , transformers >= 0.3
     , transformers-compat >= 0.3
-    , haskell-src-exts >= 1.14
+    , haskell-src-exts >= 1.18
     , tagged
