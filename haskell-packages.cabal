@@ -8,8 +8,8 @@ description:         See <http://documentup.com/haskell-suite/haskell-packages>
 license:             MIT
 license-file:        LICENSE
 author:              Roman Cheplyaka
-maintainer:          Roman Cheplyaka <roma@ro-che.info>
-copyright:           (c) Roman Cheplyaka 2012
+maintainer:          David Himmelstrup <lemmih@gmail.com>
+copyright:           (c) Roman Cheplyaka 2012, David Himmelstrup 2016-2018
 category:            Distribution
 homepage:            http://documentup.com/haskell-suite/haskell-packages
 bug-reports:         https://github.com/haskell-suite/haskell-packages/issues
