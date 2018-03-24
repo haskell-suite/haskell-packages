@@ -15,6 +15,7 @@ homepage:            http://documentup.com/haskell-suite/haskell-packages
 bug-reports:         https://github.com/haskell-suite/haskell-packages/issues
 build-type:          Simple
 cabal-version:       >=1.10
+tested-with:         GHC == 8.2.1
 extra-source-files:
   README.md
   CHANGELOG.md
