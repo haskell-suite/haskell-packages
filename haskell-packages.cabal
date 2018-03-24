@@ -39,9 +39,9 @@ library
   build-depends:
       base >=4.5 && < 5
     , optparse-applicative >= 0.11
-    , aeson >= 0.11
+    , binary >= 0.8
     , bytestring >= 0.9
-    , Cabal == 1.24.*
+    , Cabal == 2.0.*
     , deepseq
     , directory
     , filepath

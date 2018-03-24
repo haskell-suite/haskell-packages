@@ -1,40 +1,40 @@
 -- | This module provides Cabal integration.
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables #-}
+{-# LANGUAGE DeriveDataTypeable  #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Distribution.HaskellSuite.Cabal
   ( main, customMain )
   where
 
-import Data.Typeable
-import Data.Version
-import Data.List
-import Data.Monoid
-import Data.Proxy
-import Distribution.Simple.Compiler
-import Distribution.InstalledPackageInfo
-  ( showInstalledPackageInfo
-  , parseInstalledPackageInfo )
-import Distribution.ParseUtils
-import Distribution.Package
-import Distribution.Text
-import Distribution.ModuleName hiding (main)
-import Options.Applicative
-import Options.Applicative.Types
-import Control.Monad
-import Control.Monad.Trans.Except
-import Control.Exception
-import Text.Printf
+import           Control.Exception
+import           Control.Monad
+import           Control.Monad.Trans.Except
+import           Data.List
+import           Data.Monoid
+import           Data.Proxy
+import           Data.Typeable
 import qualified Distribution.HaskellSuite.Compiler as Compiler
-import Distribution.HaskellSuite.Packages
-import Language.Haskell.Exts.Extension
-import Paths_haskell_packages as Our (version)
-import System.FilePath
-import System.Directory
+import           Distribution.HaskellSuite.Packages
+import           Distribution.InstalledPackageInfo  (parseInstalledPackageInfo,
+                                                     showInstalledPackageInfo)
+import           Distribution.ModuleName            hiding (main)
+import           Distribution.Package
+import           Distribution.ParseUtils
+import           Distribution.Simple.Compiler
+import           Distribution.Text
+import           Distribution.Version
+import           Language.Haskell.Exts.Extension
+import           Options.Applicative
+import           Options.Applicative.Types
+import           Paths_haskell_packages             as Our (version)
+import           System.Directory
+import           System.FilePath
+import           Text.Printf
 
 -- It is actually important that we import 'defaultCpphsOptions' from
 -- hse-cpp and not from cpphs, because they are different. hse-cpp version
 -- provides the defaults more compatible with haskell-src-exts.
-import Language.Haskell.Exts.CPP
+import           Language.Haskell.Exts.CPP
 
 main
   :: forall c . Compiler.Is c
@@ -61,7 +61,7 @@ customMain additionalActions t =
       ]
 
   versionStr = showVersion $ Compiler.version t
-  ourVersionStr = showVersion Our.version
+  ourVersionStr = showVersion (mkVersion' Our.version)
 
   compilerVersion =
     flag'
@@ -126,7 +126,7 @@ customMain additionalActions t =
   doRegister d = do
     pi <- parseInstalledPackageInfo <$> getContents
     case pi of
-      ParseOk _ a -> Compiler.register t d a
+      ParseOk _ a   -> Compiler.register t d a
       ParseFailed e -> putStrLn $ snd $ locatedErrorMsg e
 
   pkgUnregister =
@@ -171,7 +171,7 @@ findModule srcDirs mod = do
   r <- runExceptT $ sequence_ (checkInDir <$> srcDirs <*> exts)
   case r of
     Left found -> return found
-    Right {} -> throwIO $ ModuleNotFound mod
+    Right {}   -> throwIO $ ModuleNotFound mod
 
   where
     exts = ["hs", "lhs"]
@@ -210,7 +210,7 @@ cppOptsParser = appEndo <$> allMod <*> pure defaultCpphsOptions
           def :: (String, String)
           def =
             case span (/= '=') str of
-              (_, []) -> (str, "1")
+              (_, [])      -> (str, "1")
               (sym, _:var) -> (sym, var)
           in Endo $ \opts -> opts { defines = def : defines opts }
 

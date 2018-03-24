@@ -22,7 +22,8 @@ module Distribution.HaskellSuite.Compiler
   )
   where
 
-import Data.Version
+-- import Data.Version
+import Distribution.Version
 import Distribution.HaskellSuite.Packages
 import {-# SOURCE #-} Distribution.HaskellSuite.Cabal
 import Distribution.Simple.Compiler
@@ -126,8 +127,8 @@ class IsPackageDB (DB compiler) => Is compiler where
     let
       pkgCriterion =
         -- if the version is not specified, treat it as a wildcard
-        (case pkgVersion $ packageId pkg of
-          Version [] _ ->
+        (case versionNumbers $ pkgVersion $ packageId pkg of
+          [] ->
             ((==) `on` pkgName) pkg
           _ ->
             (==) pkg)

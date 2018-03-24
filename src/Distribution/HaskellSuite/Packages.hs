@@ -1,5 +1,6 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable,
-             TemplateHaskell, ScopedTypeVariables, OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Distribution.HaskellSuite.Packages
   (
@@ -56,31 +57,25 @@ module Distribution.HaskellSuite.Packages
   )
   where
 
-import Data.Aeson
-import Data.Aeson.TH
-import Data.Aeson.Types
-import Control.Applicative
-import qualified Data.ByteString      as BS
-import qualified Data.ByteString.Lazy as LBS
-import Control.Exception as E
-import Control.Monad
-import Data.Typeable
-import Data.Tagged
-import Data.Proxy
-import qualified Data.Map as Map
-import Text.Printf
+import           Control.Exception                 as E
+import           Control.Monad
+import           Data.Binary
+import qualified Data.ByteString                   as BS
+import qualified Data.ByteString.Lazy              as LBS
+import qualified Data.Map                          as Map
+import           Data.Tagged
+import           Data.Typeable
 import qualified Distribution.InstalledPackageInfo as Info
-import Distribution.Package
-import Distribution.Text
-import System.FilePath
-import System.Directory
+import           Distribution.Package
+import           Distribution.Text
+import           System.Directory
+import           System.FilePath
+import           Text.Printf
 
 -- The following imports are needed only for JSON instances
-import Distribution.Simple.Compiler (PackageDB(..))
-import Distribution.License (License(..))
-import Distribution.ModuleName(ModuleName)
-import Distribution.Simple.Utils
-import Distribution.Verbosity
+import           Distribution.Simple.Compiler      (PackageDB (..))
+import           Distribution.Simple.Utils
+import           Distribution.Verbosity
 
 --------------
 -- Querying --
@@ -166,8 +161,8 @@ class IsPackageDB db where
 
   -- | Convert a package db specification to a db object
   locateDB :: PackageDB -> IO (Maybe db)
-  locateDB GlobalPackageDB = globalDB
-  locateDB UserPackageDB = Just <$> userDB
+  locateDB GlobalPackageDB       = globalDB
+  locateDB UserPackageDB         = Just <$> userDB
   locateDB (SpecificPackageDB p) = Just <$> dbFromPath p
 
   -- | The user database
@@ -192,8 +187,8 @@ data MaybeInitDB = InitDB | Don'tInitDB
 -- hand, it is our responsibility to ensure that the user and global
 -- databases exist.
 maybeInitDB :: PackageDB -> MaybeInitDB
-maybeInitDB GlobalPackageDB = InitDB
-maybeInitDB UserPackageDB   = InitDB
+maybeInitDB GlobalPackageDB      = InitDB
+maybeInitDB UserPackageDB        = InitDB
 maybeInitDB SpecificPackageDB {} = Don'tInitDB
 
 ----------------
@@ -260,7 +255,7 @@ readDB maybeInit path = do
   cts <- LBS.fromChunks . return <$> BS.readFile path
     `E.catch` \e ->
       throwIO $ PkgDBReadError path e
-  maybe (throwIO $ BadPkgDB path) return $ decode' cts
+  maybe (throwIO $ BadPkgDB path) return $ decode cts
 
   where
     maybeDoInitDB
@@ -312,46 +307,3 @@ instance Exception PkgInfoError
 instance Show PkgInfoError where
   show (PkgInfoNotFound pkgid) =
     printf "%s: package not found: %s" errPrefix (display pkgid)
-
----------------------
--- Aeson instances --
----------------------
-
-stdToJSON :: Text a => a -> Value
-stdToJSON = toJSON . display
-stdFromJSON :: Text a => Value -> Parser a
-stdFromJSON = maybe mzero return . simpleParse <=< parseJSON
-
-instance ToJSON License where
-  toJSON = stdToJSON
-instance FromJSON License where
-  parseJSON = stdFromJSON
-
-instance ToJSON ModuleName where
-  toJSON = stdToJSON
-instance FromJSON ModuleName where
-  parseJSON = stdFromJSON
-
-instance ToJSON PackageName where
-  toJSON = stdToJSON
-instance FromJSON PackageName where
-  parseJSON = stdFromJSON
-
-instance ToJSON PackageIdentifier where
-  toJSON = stdToJSON
-instance FromJSON PackageIdentifier where
-  parseJSON = stdFromJSON
-
-instance ToJSON UnitId where
-  toJSON = stdToJSON
-instance FromJSON UnitId where
-  parseJSON = stdFromJSON
-
-instance ToJSON AbiHash where
-  toJSON = stdToJSON
-instance FromJSON AbiHash where
-  parseJSON = stdFromJSON
-
-deriveJSON defaultOptions ''Info.OriginalModule
-deriveJSON defaultOptions ''Info.ExposedModule
-deriveJSON defaultOptions ''Info.InstalledPackageInfo
