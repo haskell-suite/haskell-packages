@@ -1,8 +1,11 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, TypeFamilies,
-             FlexibleInstances, TypeSynonymInstances,
-             DeriveDataTypeable, StandaloneDeriving,
-             MultiParamTypeClasses, UndecidableInstances,
-             ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeSynonymInstances       #-}
+{-# LANGUAGE UndecidableInstances       #-}
 module Distribution.HaskellSuite.Modules
   (
   -- * Module monad
@@ -28,21 +31,20 @@ module Distribution.HaskellSuite.Modules
   , ModName(..)
   , convertModuleName
   ) where
-import Distribution.HaskellSuite.Packages
-import Distribution.Simple.Utils
-import Distribution.InstalledPackageInfo
-import Distribution.Text
-import Distribution.ModuleName
-import Control.Applicative
-import Control.Monad
-import Control.Monad.State
-import Control.Monad.Cont
-import Control.Monad.Error
-import Control.Monad.Reader
-import Control.Monad.Writer
-import Data.List
-import qualified Data.Map as Map
-import System.FilePath
+import           Control.Monad
+import           Control.Monad.Cont
+import           Control.Monad.Except
+import           Control.Monad.Reader
+import           Control.Monad.State
+import           Control.Monad.Writer
+import           Data.List
+import qualified Data.Map                           as Map
+import           Distribution.HaskellSuite.Packages
+import           Distribution.InstalledPackageInfo
+import           Distribution.ModuleName
+import           Distribution.Simple.Utils
+import           Distribution.Text
+import           System.FilePath
 
 -- | This class defines the interface that is used by 'getModuleInfo', so
 -- that you can use it in monads other than 'ModuleT'.
@@ -112,9 +114,9 @@ findModule'sPackage pkgs m =
 -- @i@ is the type of module info, @m@ is the underlying monad.
 newtype ModuleT i m a =
   ModuleT { unModuleT ::
-    (StateT (Map.Map ModuleName i)
+    StateT (Map.Map ModuleName i)
       (ReaderT (Packages, [FilePath] -> ModuleName -> m i) m)
-      a)
+      a
   }
   deriving (Functor, Applicative, Monad)
 

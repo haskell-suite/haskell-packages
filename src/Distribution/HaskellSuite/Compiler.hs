@@ -96,7 +96,7 @@ class IsPackageDB (DB compiler) => Is compiler where
       -> IO ()
   installLib t buildDir targetDir _dynlibTargetDir _pkg mods =
     -- see https://github.com/haskell-suite/haskell-packages/pull/17
-    forM_ (fileExtensions t) $ \ext -> do
+    forM_ (fileExtensions t) $ \ext ->
       findModuleFiles [buildDir] [ext] mods
         >>= installOrdinaryFiles normal targetDir
 
@@ -146,7 +146,7 @@ class IsPackageDB (DB compiler) => Is compiler where
 
         if null packagesRemoved
           then
-            putStrLn $ "No packages removed"
+            putStrLn "No packages removed"
           else do
             putStrLn "Packages removed:"
             forM_ packagesRemoved $ \p ->

@@ -198,7 +198,7 @@ maybeInitDB SpecificPackageDB {} = Don'tInitDB
 class IsDBName name where
   getDBName :: Tagged name String
 
-data StandardDB name = StandardDB FilePath
+newtype StandardDB name = StandardDB FilePath
 
 instance IsDBName name => IsPackageDB (StandardDB name) where
   dbName = retag (getDBName :: Tagged name String)
@@ -216,8 +216,7 @@ instance IsDBName name => IsPackageDB (StandardDB name) where
 -- | Make all paths in the package info relative to the given base
 -- directory.
 makePkgInfoRelative :: FilePath -> Info.InstalledPackageInfo -> Info.InstalledPackageInfo
-makePkgInfoRelative base info =
-  mapPaths (makeRelative base) info
+makePkgInfoRelative base = mapPaths (makeRelative base)
 
 -- | Make all relative paths in the package info absolute, interpreting
 -- them relative to the given base directory.
@@ -295,11 +294,11 @@ instance Show PkgDBError where
       errPrefix path (show e)
   show (PkgExists pkgid) =
     printf "%s: package %s is already in the database" errPrefix (display pkgid)
-  show (RegisterNullDB) =
+  show RegisterNullDB =
     printf "%s: attempt to register in a null global db" errPrefix
 instance Exception PkgDBError
 
-data PkgInfoError
+newtype PkgInfoError
   = PkgInfoNotFound UnitId
   -- ^ requested package id could not be found in any of the package databases
   deriving Typeable

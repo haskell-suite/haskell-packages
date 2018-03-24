@@ -9,6 +9,7 @@ module Distribution.HaskellSuite.Cabal
 import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Trans.Except
+import           Data.Foldable                      (asum)
 import           Data.List
 import           Data.Monoid
 import           Data.Proxy
@@ -50,7 +51,7 @@ customMain additionalActions t =
   where
 
   optParser =
-    foldr (<|>) empty
+    asum
       [ version
       , compilerVersion
       , hspkgVersion
@@ -113,11 +114,11 @@ customMain additionalActions t =
 
   pkgInstallLib = command "install-library" $ flip info idm $
     Compiler.installLib t <$>
-      (strOption (long "build-dir" <> metavar "PATH")) <*>
-      (strOption (long "target-dir" <> metavar "PATH")) <*>
-      (optional $ strOption (long "dynlib-target-dir" <> metavar "PATH")) <*>
-      (option (simpleParseM "package-id") (long "package-id" <> metavar "ID")) <*>
-      (many $ argument (simpleParseM "module") (metavar "MODULE"))
+      strOption (long "build-dir" <> metavar "PATH") <*>
+      strOption (long "target-dir" <> metavar "PATH") <*>
+      optional (strOption (long "dynlib-target-dir" <> metavar "PATH")) <*>
+      option (simpleParseM "package-id") (long "package-id" <> metavar "ID") <*>
+      many (argument (simpleParseM "module") (metavar "MODULE"))
 
   pkgUpdate =
     command "update" $ flip info idm $
@@ -146,17 +147,17 @@ customMain additionalActions t =
   compiler =
     (\srcDirs buildDir lang exts cppOpts pkg dbStack deps mods ->
         Compiler.compile t buildDir lang exts cppOpts pkg dbStack deps =<< findModules srcDirs mods) <$>
-      (many $ strOption (short 'i' <> metavar "PATH")) <*>
+      many (strOption (short 'i' <> metavar "PATH")) <*>
       (strOption (long "build-dir" <> metavar "PATH") <|> pure ".") <*>
-      (optional $ classifyLanguage <$> strOption (short 'G' <> metavar "language")) <*>
-      (many $ parseExtension <$> strOption (short 'X' <> metavar "extension")) <*>
+      optional (classifyLanguage <$> strOption (short 'G' <> metavar "language")) <*>
+      many (parseExtension <$> strOption (short 'X' <> metavar "extension")) <*>
       cppOptsParser <*>
-      (option (simpleParseM "package name") (long "package-name" <> metavar "NAME-VERSION")) <*>
+      option (simpleParseM "package name") (long "package-name" <> metavar "NAME-VERSION") <*>
       pkgDbStackParser <*>
-      (many $ mkUnitId <$> strOption (long "package-id")) <*>
-      (many $ argument str (metavar "MODULE"))
+      many (mkUnitId <$> strOption (long "package-id")) <*>
+      many (argument str (metavar "MODULE"))
 
-data ModuleNotFound = ModuleNotFound String
+newtype ModuleNotFound = ModuleNotFound String
   deriving Typeable
 
 instance Show ModuleNotFound where
