@@ -2,7 +2,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeSynonymInstances       #-}
 {-# LANGUAGE UndecidableInstances       #-}
@@ -118,7 +117,7 @@ newtype ModuleT i m a =
       (ReaderT (Packages, [FilePath] -> ModuleName -> m i) m)
       a
   }
-  deriving (Functor, Applicative, Monad)
+  deriving (Functor, Applicative, Monad, MonadWriter w, MonadError e, MonadCont)
 
 instance MonadTrans (ModuleT i) where
   lift = ModuleT . lift . lift
@@ -151,12 +150,6 @@ instance MonadState s m => MonadState s (ModuleT i m) where
   get   = lift get
   put   = lift . put
   state = lift . state
-
-deriving instance MonadWriter w m => MonadWriter w (ModuleT i m)
-
-deriving instance MonadError e m => MonadError e (ModuleT i m)
-
-deriving instance MonadCont m => MonadCont (ModuleT i m)
 
 -- | Run a 'ModuleT' action
 runModuleT
