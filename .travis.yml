@@ -1,5 +1,0 @@
-language: haskell
-addons:
-  apt:
-    packages:
-      - happy-1.19.5
