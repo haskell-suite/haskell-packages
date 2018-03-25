@@ -254,7 +254,9 @@ readDB maybeInit path = do
   cts <- LBS.fromChunks . return <$> BS.readFile path
     `E.catch` \e ->
       throwIO $ PkgDBReadError path e
-  maybe (throwIO $ BadPkgDB path) return $ decode cts
+  case decodeOrFail cts of
+    Left{} -> throwIO $ BadPkgDB path
+    Right (_rest, _offset, values) -> pure values
 
   where
     maybeDoInitDB
